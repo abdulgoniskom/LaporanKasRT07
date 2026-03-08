@@ -40,7 +40,7 @@ color:white;
 
 <script>
 
-fetch("LINK_API_KAMU")
+fetch("https://script.google.com/macros/s/AKfycby6butKsqn4x445pUa8DBH12c1_tH7xx_Lb8Os7rXAFmjLfrVKtGsqpK9zjDG-Ouf0/exec")
 .then(res => res.json())
 .then(data => {
 
