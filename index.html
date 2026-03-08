@@ -1,68 +1,199 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Laporan Kas RT</title>
+
+<title>Dashboard Kas RT</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-table{
-border-collapse: collapse;
-width:100%;
+
+body{
+font-family:Arial;
+background:#f1f4f9;
+margin:0;
 }
-th,td{
-border:1px solid #ccc;
-padding:8px;
-text-align:center;
-}
-th{
+
+.navbar{
 background:#2c7be5;
 color:white;
+padding:15px;
+font-size:20px;
 }
+
+.menu{
+display:flex;
+gap:20px;
+padding:10px;
+background:white;
+}
+
+.menu button{
+padding:10px 20px;
+border:none;
+background:#eee;
+cursor:pointer;
+}
+
+.card{
+background:white;
+padding:20px;
+margin:20px;
+border-radius:10px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border-bottom:1px solid #ddd;
+text-align:center;
+}
+
 </style>
+
 </head>
 
 <body>
 
-<h2>Laporan Kas RT</h2>
+<div class="navbar">
+Dashboard Kas RT
+</div>
 
-<table id="tabelKas">
+<div class="menu">
+<button onclick="loadData('Kas_RT')">Kas RT</button>
+<button onclick="loadData('Kas_Agustusan')">Kas Agustusan</button>
+</div>
+
+<div class="card">
+
+<canvas id="chartKas"></canvas>
+
+</div>
+
+<div class="card">
+
+<table>
+
 <thead>
+
 <tr>
 <th>Tanggal</th>
 <th>Keterangan</th>
 <th>Masuk</th>
 <th>Keluar</th>
-<th>Saldo</th>
 </tr>
+
 </thead>
 
-<tbody></tbody>
+<tbody id="dataKas"></tbody>
 
 </table>
 
+</div>
+
+<div class="card">
+
+<h3>Input Data</h3>
+
+<input type="date" id="tanggal"><br><br>
+<input type="text" id="ket" placeholder="Keterangan"><br><br>
+<input type="number" id="masuk" placeholder="Kas Masuk"><br><br>
+<input type="number" id="keluar" placeholder="Kas Keluar"><br><br>
+
+<button onclick="kirim()">Simpan</button>
+
+</div>
+
 <script>
 
-fetch("https://script.google.com/macros/s/AKfycby6butKsqn4x445pUa8DBH12c1_tH7xx_Lb8Os7rXAFmjLfrVKtGsqpK9zjDG-Ouf0/exec")
-.then(res => res.json())
-.then(data => {
+const API = "LINK_APPS_SCRIPT";
 
-let tbody = document.querySelector("#tabelKas tbody");
+let chart;
 
-data.forEach(row => {
+function loadData(sheet){
 
-let tr = `
+fetch(API+"?sheet="+sheet)
+
+.then(res=>res.json())
+
+.then(data=>{
+
+let tbody=document.getElementById("dataKas");
+
+tbody.innerHTML="";
+
+let masuk=0;
+let keluar=0;
+
+data.forEach(d=>{
+
+masuk+=Number(d.masuk||0);
+keluar+=Number(d.keluar||0);
+
+tbody.innerHTML+=`
 <tr>
-<td>${row.tanggal}</td>
-<td>${row.keterangan}</td>
-<td>${row.masuk}</td>
-<td>${row.keluar}</td>
-<td>${row.saldo}</td>
+<td>${d.tanggal}</td>
+<td>${d.keterangan}</td>
+<td>${d.masuk}</td>
+<td>${d.keluar}</td>
 </tr>
 `;
 
-tbody.innerHTML += tr;
+});
+
+buatChart(masuk,keluar);
 
 });
 
+}
+
+function buatChart(masuk,keluar){
+
+let ctx=document.getElementById("chartKas");
+
+if(chart) chart.destroy();
+
+chart=new Chart(ctx,{
+type:"bar",
+data:{
+labels:["Pemasukan","Pengeluaran"],
+datasets:[{
+label:"Kas",
+data:[masuk,keluar]
+}]
+}
 });
+
+}
+
+function kirim(){
+
+let data={
+sheet:"Kas_RT",
+tanggal:document.getElementById("tanggal").value,
+keterangan:document.getElementById("ket").value,
+masuk:document.getElementById("masuk").value,
+keluar:document.getElementById("keluar").value
+};
+
+fetch(API,{
+method:"POST",
+body:JSON.stringify(data)
+})
+.then(res=>res.json())
+.then(r=>{
+alert("Data tersimpan");
+loadData("Kas_RT");
+});
+
+}
+
+loadData("Kas_RT");
 
 </script>
 
