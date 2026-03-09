@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Kas RT 07 BIC </title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Kas RT</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -14,64 +13,52 @@
 body{
 font-family:Arial;
 margin:0;
-background:#f4f6f9;
+background:#eef2f7;
 }
 
 header{
-background:#2c3e50;
+background:#2f80ed;
 color:white;
 padding:15px;
 text-align:center;
-font-size:20px;
 }
 
-.dashboard{
-display:flex;
-flex-wrap:wrap;
-gap:10px;
-padding:10px;
+.container{
+padding:20px;
+max-width:1000px;
+margin:auto;
 }
 
 .card{
-flex:1;
 background:white;
-border-radius:10px;
 padding:15px;
-box-shadow:0 2px 5px rgba(0,0,0,0.1);
-text-align:center;
+border-radius:10px;
+margin-bottom:20px;
+box-shadow:0 4px 8px rgba(0,0,0,0.1);
 }
 
-.card h3{
-margin:5px;
+button{
+background:#2f80ed;
+color:white;
+border:none;
+padding:8px 12px;
+border-radius:5px;
+cursor:pointer;
 }
 
-.green{
-color:green;
-}
-
-.red{
-color:red;
-}
-
-.blue{
-color:#3498db;
+.logout{
+background:red;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-background:white;
 }
 
 th,td{
-padding:10px;
 border-bottom:1px solid #ddd;
+padding:8px;
 text-align:center;
-}
-
-th{
-background:#34495e;
-color:white;
 }
 
 .masuk{
@@ -84,100 +71,78 @@ color:red;
 font-weight:bold;
 }
 
-.search{
-padding:10px;
-width:95%;
-margin:10px;
-border-radius:5px;
-border:1px solid #ccc;
-}
-
-button{
-padding:10px 15px;
-border:none;
-border-radius:5px;
-cursor:pointer;
-}
-
-.loginbtn{
-background:#2ecc71;
-color:white;
-}
-
-.logoutbtn{
-background:#e74c3c;
-color:white;
-}
-
-.bottommenu{
-position:fixed;
-bottom:0;
-width:100%;
-background:white;
-display:flex;
-justify-content:space-around;
-border-top:1px solid #ccc;
-padding:10px;
-}
-
-.menuitem{
-text-align:center;
-font-size:14px;
-}
-
-canvas{
-background:white;
-margin:10px;
-border-radius:10px;
-padding:10px;
-}
-
-.forminput{
-display:none;
-background:white;
-margin:10px;
-padding:10px;
-border-radius:10px;
-}
-
-input{
+input,select{
 padding:8px;
 margin:5px;
 }
 
+.formInput{
+display:none;
+}
+
 </style>
+
 </head>
 
 <body>
 
 <header>
-Kas RT 07 Bumi Indah Citty
-<button class="loginbtn" onclick="login()">Login Admin</button>
-<button class="logoutbtn" onclick="logout()" style="display:none" id="logout">Logout</button>
+<h2>Dashboard Kas RT</h2>
 </header>
 
-<div class="dashboard">
+<div class="container">
 
 <div class="card">
-<h3>Total Saldo</h3>
-<h2 id="saldo" class="blue">Rp 0</h2>
+
+<select id="pilihKas" onchange="loadData()">
+<option value="Kas_RT">Kas RT</option>
+<option value="Kas_Agustus">Kas Agustusan</option>
+</select>
+
+<select id="filterBulan" onchange="loadData()">
+<option value="">Semua Bulan</option>
+<option value="1">Januari</option>
+<option value="2">Februari</option>
+<option value="3">Maret</option>
+<option value="4">April</option>
+<option value="5">Mei</option>
+<option value="6">Juni</option>
+<option value="7">Juli</option>
+<option value="8">Agustus</option>
+<option value="9">September</option>
+<option value="10">Oktober</option>
+<option value="11">November</option>
+<option value="12">Desember</option>
+</select>
+
+<h3 id="saldo">Saldo : Rp 0</h3>
+
+<div style="text-align:right">
+
+<button id="loginBtn">Login Admin</button>
+<button id="logoutBtn" class="logout" style="display:none">Logout</button>
+<button onclick="cetakPDF()">Cetak PDF</button>
+
+</div>
+
+</div>
+
+<div class="card formInput" id="formInput">
+
+<h3>Input Transaksi</h3>
+
+<input type="date" id="tanggal">
+<input type="text" id="ket" placeholder="Keterangan">
+<input type="number" id="masuk" placeholder="Kas Masuk">
+<input type="number" id="keluar" placeholder="Kas Keluar">
+
+<button onclick="simpan()">Simpan</button>
+
 </div>
 
 <div class="card">
-<h3>Total Pemasukan</h3>
-<h2 id="masuk" class="green">Rp 0</h2>
-</div>
 
-<div class="card">
-<h3>Total Pengeluaran</h3>
-<h2 id="keluar" class="red">Rp 0</h2>
-</div>
-
-</div>
-
-<canvas id="grafik"></canvas>
-
-<input class="search" id="search" placeholder="Cari transaksi..." onkeyup="searchData()">
+<input type="text" id="search" placeholder="Cari transaksi..." onkeyup="cariData()">
 
 <table>
 
@@ -188,147 +153,48 @@ Kas RT 07 Bumi Indah Citty
 <th>Masuk</th>
 <th>Keluar</th>
 <th>Saldo</th>
-<th>Jenis</th>
 </tr>
 </thead>
 
-<tbody id="tabel"></tbody>
+<tbody id="tabelKas"></tbody>
 
 </table>
 
-<div class="forminput" id="forminput">
-
-<h3>Input Transaksi</h3>
-
-<input type="date" id="tgl">
-<input type="text" id="ket" placeholder="Keterangan">
-<input type="number" id="masukinput" placeholder="Kas Masuk">
-<input type="number" id="keluarinput" placeholder="Kas Keluar">
-
-<select id="jenis">
-<option>RT</option>
-<option>AGUSTUSAN</option>
-</select>
-
-<button onclick="simpan()">Simpan</button>
-
 </div>
 
-<div style="text-align:center;margin:10px;">
-<button onclick="exportPDF()">Cetak PDF</button>
+<div class="card">
+
+<h3>Grafik Pemasukan vs Pengeluaran</h3>
+
+<canvas id="chartKas"></canvas>
+
 </div>
-
-<div class="bottommenu">
-
-<div class="menuitem">🏠<br>Dashboard</div>
-<div class="menuitem">📊<br>Grafik</div>
-<div class="menuitem">📄<br>Laporan</div>
 
 </div>
 
 <script>
 
-const url="https://script.google.com/macros/s/AKfycbw6F3TTzWFggrgZTGIrzCTjjUMW4kZdvZPyGp89aigYcob5Xuv6DUUXq8uwllB5PfA/exec";
+const API="https://script.google.com/macros/s/AKfycbw6F3TTzWFggrgZTGIrzCTjjUMW4kZdvZPyGp89aigYcob5Xuv6DUUXq8uwllB5PfA/exec";
 
-let dataKas=[];
+let admin=false;
+let chart;
 
-function rupiah(x){
-return "Rp "+Number(x).toLocaleString("id-ID");
+function rupiah(angka){
+return "Rp " + Number(angka).toLocaleString("id-ID");
 }
 
-async function loadData(){
-
-let res=await fetch(url);
-let data=await res.json();
-
-dataKas=data;
-
-render(dataKas);
-
-}
-
-function render(data){
-
-let html="";
-let totalMasuk=0;
-let totalKeluar=0;
-let saldo=0;
-
-data.forEach(d=>{
-
-totalMasuk+=Number(d.Masuk);
-totalKeluar+=Number(d.Keluar);
-saldo=Number(d.Saldo);
-
-html+=`
-<tr>
-<td>${d.Tanggal}</td>
-<td>${d.Keterangan}</td>
-<td class="masuk">${rupiah(d.Masuk)}</td>
-<td class="keluar">${rupiah(d.Keluar)}</td>
-<td>${rupiah(d.Saldo)}</td>
-<td>${d.Jenis}</td>
-</tr>
-`;
-
-});
-
-document.getElementById("tabel").innerHTML=html;
-
-document.getElementById("saldo").innerHTML=rupiah(saldo);
-document.getElementById("masuk").innerHTML=rupiah(totalMasuk);
-document.getElementById("keluar").innerHTML=rupiah(totalKeluar);
-
-grafik(data);
-
-}
-
-function grafik(data){
-
-let rtMasuk=0;
-let agtMasuk=0;
-
-data.forEach(d=>{
-
-if(d.Jenis=="RT") rtMasuk+=Number(d.Masuk);
-if(d.Jenis=="AGUSTUSAN") agtMasuk+=Number(d.Masuk);
-
-});
-
-new Chart(document.getElementById("grafik"),{
-type:"bar",
-data:{
-labels:["Kas RT","Kas Agustusan"],
-datasets:[{
-label:"Pemasukan",
-data:[rtMasuk,agtMasuk]
-}]
-}
-});
-
-}
-
-function searchData(){
-
-let s=document.getElementById("search").value.toLowerCase();
-
-let filter=dataKas.filter(d=>d.Keterangan.toLowerCase().includes(s));
-
-render(filter);
-
-}
-
-function login(){
+document.getElementById("loginBtn").onclick=function(){
 
 let user=prompt("Username");
 let pass=prompt("Password");
 
-if(user=="admin" && pass=="12345"){
+if(user==="admin" && pass==="12345"){
 
-document.getElementById("forminput").style.display="block";
-document.getElementById("logout").style.display="inline";
+admin=true;
 
-alert("Login berhasil");
+document.getElementById("formInput").style.display="block";
+document.getElementById("loginBtn").style.display="none";
+document.getElementById("logoutBtn").style.display="inline";
 
 }else{
 
@@ -338,37 +204,174 @@ alert("Login gagal");
 
 }
 
-function logout(){
+document.getElementById("logoutBtn").onclick=function(){
 
-location.reload();
+admin=false;
+
+document.getElementById("formInput").style.display="none";
+document.getElementById("loginBtn").style.display="inline";
+document.getElementById("logoutBtn").style.display="none";
 
 }
 
-function exportPDF(){
+function loadData(){
 
-const {jsPDF}=window.jspdf;
+let sheet=document.getElementById("pilihKas").value;
+let bulanFilter=document.getElementById("filterBulan").value;
+
+fetch(API+"?sheet="+sheet)
+
+.then(res=>res.json())
+
+.then(data=>{
+
+let html="";
+let saldo=0;
+
+let totalMasuk=0;
+let totalKeluar=0;
+
+data.forEach(d=>{
+
+let bulan=new Date(d.tanggal).getMonth()+1;
+
+if(bulanFilter && bulan!=bulanFilter) return;
+
+saldo+=Number(d.masuk)-Number(d.keluar);
+
+d.saldo=saldo;
+
+});
+
+data.reverse();
+
+data.forEach(d=>{
+
+let bulan=new Date(d.tanggal).getMonth()+1;
+
+if(bulanFilter && bulan!=bulanFilter) return;
+
+let tgl=new Date(d.tanggal).toLocaleDateString("id-ID");
+
+totalMasuk+=Number(d.masuk);
+totalKeluar+=Number(d.keluar);
+
+html+=`
+<tr>
+<td>${tgl}</td>
+<td>${d.keterangan}</td>
+<td class="masuk">${rupiah(d.masuk)}</td>
+<td class="keluar">${rupiah(d.keluar)}</td>
+<td>${rupiah(d.saldo)}</td>
+</tr>
+`;
+
+});
+
+document.getElementById("tabelKas").innerHTML=html;
+
+document.getElementById("saldo").innerHTML="Saldo : "+rupiah(saldo);
+
+grafik(totalMasuk,totalKeluar);
+
+})
+
+}
+
+function grafik(masuk,keluar){
+
+if(chart) chart.destroy();
+
+chart=new Chart(document.getElementById("chartKas"),{
+
+type:"doughnut",
+
+data:{
+
+labels:["Pemasukan","Pengeluaran"],
+
+datasets:[{
+
+data:[masuk,keluar]
+
+}]
+
+}
+
+})
+
+}
+
+function cariData(){
+
+let input=document.getElementById("search").value.toLowerCase();
+
+let rows=document.querySelectorAll("#tabelKas tr");
+
+rows.forEach(r=>{
+
+let text=r.innerText.toLowerCase();
+
+r.style.display=text.includes(input)?"":"none";
+
+})
+
+}
+
+function simpan(){
+
+let sheet=document.getElementById("pilihKas").value;
+
+let data={
+
+sheet:sheet,
+tanggal:document.getElementById("tanggal").value,
+keterangan:document.getElementById("ket").value,
+masuk:document.getElementById("masuk").value,
+keluar:document.getElementById("keluar").value
+
+}
+
+fetch(API,{
+method:"POST",
+body:JSON.stringify(data)
+})
+
+.then(res=>res.text())
+.then(()=>{
+alert("Data tersimpan");
+loadData();
+})
+
+}
+
+function cetakPDF(){
+
+const { jsPDF } = window.jspdf;
 
 let doc=new jsPDF();
 
 doc.text("Laporan Kas RT",20,20);
 
+let rows=document.querySelectorAll("#tabelKas tr");
+
 let y=30;
 
-dataKas.forEach(d=>{
-
-doc.text(`${d.Tanggal} ${d.Keterangan} ${d.Masuk} ${d.Keluar}`,20,y);
-
+rows.forEach(r=>{
+doc.text(r.innerText,20,y);
 y+=10;
-
 });
 
-doc.save("laporan_kas.pdf");
+doc.save("laporan-kas.pdf");
 
 }
 
 loadData();
 
+setInterval(loadData,5000);
+
 </script>
 
 </body>
+
 </html>
