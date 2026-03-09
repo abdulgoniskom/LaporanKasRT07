@@ -5,7 +5,69 @@
 <title>Dashboard Kas RT</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
 
+if(localStorage.getItem("login")!="true"){
+window.location="login.html";
+}
+
+function rekapBulanan(data){
+
+let bulan={};
+
+data.forEach(d=>{
+
+let tgl=new Date(d.tanggal);
+let key=tgl.getFullYear()+"-"+(tgl.getMonth()+1);
+
+let masuk=Number(d.masuk||0);
+let keluar=Number(d.keluar||0);
+
+if(!bulan[key]){
+bulan[key]={masuk:0,keluar:0};
+}
+
+bulan[key].masuk+=masuk;
+bulan[key].keluar+=keluar;
+
+});
+
+return bulan;
+
+}
+
+function grafikBulanan(bulan){
+
+let labels=[];
+let masuk=[];
+let keluar=[];
+
+for(let b in bulan){
+
+labels.push(b);
+masuk.push(bulan[b].masuk);
+keluar.push(bulan[b].keluar);
+
+}
+
+new Chart(document.getElementById("chartBulanan"),{
+
+type:"line",
+
+data:{
+labels:labels,
+datasets:[
+{label:"Pemasukan",data:masuk},
+{label:"Pengeluaran",data:keluar}
+]
+
+}
+
+});
+
+}
+
+</script>
 <style>
 
 body{
