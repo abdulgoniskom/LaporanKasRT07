@@ -3,13 +3,11 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard Kas RT 07 Bumi Indah Citty</title>
+<title>Dashboard Kas RT 07</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
 <style>
 
@@ -27,7 +25,7 @@ text-align:center;
 }
 
 .container{
-padding:20px;
+padding:15px;
 max-width:1000px;
 margin:auto;
 }
@@ -35,8 +33,8 @@ margin:auto;
 .card{
 background:white;
 padding:15px;
-border-radius:10px;
-margin-bottom:20px;
+border-radius:12px;
+margin-bottom:15px;
 box-shadow:0 4px 8px rgba(0,0,0,0.1);
 }
 
@@ -45,29 +43,34 @@ background:#2f80ed;
 color:white;
 border:none;
 padding:8px 12px;
-border-radius:5px;
+border-radius:6px;
 cursor:pointer;
 }
 
-.logout{
-background:red;
+button.hapus{
+background:#e74c3c;
+}
+
+button.edit{
+background:#f39c12;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-}
-
-th,td{
-border-bottom:1px solid #ddd;
-padding:8px;
-text-align:center;
-font-size:13px;
+font-size:14px;
 }
 
 th{
 background:#2f80ed;
 color:white;
+padding:8px;
+}
+
+td{
+padding:8px;
+border-bottom:1px solid #ddd;
+text-align:center;
 }
 
 .masuk{
@@ -80,80 +83,53 @@ color:red;
 font-weight:bold;
 }
 
-input,select{
+.bottomMenu{
+position:fixed;
+bottom:0;
+width:100%;
+background:white;
+display:flex;
+justify-content:space-around;
+border-top:1px solid #ddd;
 padding:8px;
-margin:5px;
 }
 
-.formInput{
-display:none;
+.bottomMenu button{
+background:none;
+color:#2f80ed;
+font-weight:bold;
 }
 
 </style>
-
 </head>
 
 <body>
 
 <header>
-<h2>Laporan Kas RT 07 Bumi Indah Citty</h2>
+<h2>Kas RT 07 Bumi Indah Citty</h2>
 </header>
 
 <div class="container">
 
 <div class="card">
 
-<select id="pilihKas" onchange="loadData()">
+<select id="pilihKas">
 <option value="Kas_RT">Kas RT</option>
 <option value="Kas_Agustusan">Kas Agustusan</option>
 </select>
 
-<select id="filterBulan" onchange="loadData()">
-<option value="">Semua Bulan</option>
-<option value="1">Januari</option>
-<option value="2">Februari</option>
-<option value="3">Maret</option>
-<option value="4">April</option>
-<option value="5">Mei</option>
-<option value="6">Juni</option>
-<option value="7">Juli</option>
-<option value="8">Agustus</option>
-<option value="9">September</option>
-<option value="10">Oktober</option>
-<option value="11">November</option>
-<option value="12">Desember</option>
-</select>
-
-<select id="filterPeriode" onchange="loadData()">
+<select id="filter">
 <option value="bulan">Per Bulan</option>
 <option value="3bulan">3 Bulan</option>
-<option value="tahun">1 Tahun</option>
+<option value="tahun">Tahunan</option>
 </select>
+
+<button onclick="loadData()">Refresh</button>
 
 <h3 id="saldo">Saldo : Rp 0</h3>
 
-<div style="text-align:right">
-
-<button id="loginBtn">Login Admin</button>
-<button id="logoutBtn" class="logout" style="display:none">Logout</button>
-<button onclick="cetakPDF()">Cetak PDF</button>
-
 </div>
 
-</div>
-
-<div class="card formInput" id="formInput">
-
-<h3>Input Transaksi</h3>
-
-<input type="date" id="tanggal">
-<input type="text" id="ket" placeholder="Keterangan">
-<input type="number" id="masuk" placeholder="Kas Masuk">
-<input type="number" id="keluar" placeholder="Kas Keluar">
-
-<button onclick="simpan()">Simpan</button>
-
-</div>
 
 <div class="card">
 
@@ -168,6 +144,7 @@ display:none;
 <th>Masuk</th>
 <th>Keluar</th>
 <th>Saldo</th>
+<th>Aksi</th>
 </tr>
 </thead>
 
@@ -177,94 +154,71 @@ display:none;
 
 </div>
 
+
 <div class="card">
 
-<h3>Grafik Pemasukan vs Pengeluaran</h3>
-
+<h3>Grafik Kas</h3>
 <canvas id="chartKas"></canvas>
 
 </div>
 
 </div>
 
+<div class="bottomMenu">
+
+<button onclick="login()">Login</button>
+<button onclick="tambah()">Tambah</button>
+<button onclick="cetakPDF()">PDF</button>
+
+</div>
+
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbw6F3TTzWFggrgZTGIrzCTjjUMW4kZdvZPyGp89aigYcob5Xuv6DUUXq8uwllB5PfA/exec";
+const API="URL_APPS_SCRIPT_ANDA";
 
-let admin=false;
 let chart;
+let dataKas=[];
 
-function rupiah(angka){
-return "Rp "+Number(angka).toLocaleString("id-ID");
-}
-
-document.getElementById("loginBtn").onclick=function(){
-
-let user=prompt("Username");
-let pass=prompt("Password");
-
-if(user==="admin" && pass==="12345"){
-
-admin=true;
-
-document.getElementById("formInput").style.display="block";
-document.getElementById("loginBtn").style.display="none";
-document.getElementById("logoutBtn").style.display="inline";
-
-}else{
-
-alert("Login gagal");
-
-}
-
-}
-
-document.getElementById("logoutBtn").onclick=function(){
-
-admin=false;
-
-document.getElementById("formInput").style.display="none";
-document.getElementById("loginBtn").style.display="inline";
-document.getElementById("logoutBtn").style.display="none";
-
+function rupiah(n){
+return "Rp "+Number(n).toLocaleString("id-ID");
 }
 
 function loadData(){
 
 let sheet=document.getElementById("pilihKas").value;
-let bulanFilter=document.getElementById("filterBulan").value;
 
 fetch(API+"?sheet="+sheet)
 
-.then(res=>res.json())
+.then(r=>r.json())
 
 .then(data=>{
 
+dataKas=data;
+
 let html="";
 let saldo=0;
+
 let totalMasuk=0;
 let totalKeluar=0;
 
-data.forEach(d=>{
-
-let bulan=new Date(d.tanggal).getMonth()+1;
-
-if(bulanFilter && bulan!=bulanFilter) return;
+data.forEach((d,i)=>{
 
 saldo+=Number(d.masuk)-Number(d.keluar);
-
-let tgl=new Date(d.tanggal).toLocaleDateString("id-ID");
 
 totalMasuk+=Number(d.masuk);
 totalKeluar+=Number(d.keluar);
 
 html+=`
 <tr>
-<td>${tgl}</td>
+<td>${new Date(d.tanggal).toLocaleDateString("id-ID")}</td>
 <td>${d.keterangan}</td>
 <td class="masuk">${rupiah(d.masuk)}</td>
 <td class="keluar">${rupiah(d.keluar)}</td>
 <td>${rupiah(saldo)}</td>
+<td>
+<button class="edit" onclick="edit(${i})">Edit</button>
+<button class="hapus" onclick="hapus(${i})">Hapus</button>
+</td>
 </tr>
 `;
 
@@ -286,13 +240,18 @@ if(chart) chart.destroy();
 
 chart=new Chart(document.getElementById("chartKas"),{
 
-type:"doughnut",
+type:"bar",
 
 data:{
+
 labels:["Pemasukan","Pengeluaran"],
+
 datasets:[{
+
 data:[masuk,keluar]
+
 }]
+
 }
 
 })
@@ -303,42 +262,11 @@ function cariData(){
 
 let input=document.getElementById("search").value.toLowerCase();
 
-let rows=document.querySelectorAll("#tabelKas tr");
+document.querySelectorAll("#tabelKas tr").forEach(tr=>{
 
-rows.forEach(r=>{
+tr.style.display=tr.innerText.toLowerCase().includes(input)?"":"none";
 
-let text=r.innerText.toLowerCase();
-
-r.style.display=text.includes(input)?"":"none";
-
-})
-
-}
-
-function simpan(){
-
-let sheet=document.getElementById("pilihKas").value;
-
-let data={
-
-sheet:sheet,
-tanggal:document.getElementById("tanggal").value,
-keterangan:document.getElementById("ket").value,
-masuk:document.getElementById("masuk").value,
-keluar:document.getElementById("keluar").value
-
-}
-
-fetch(API,{
-method:"POST",
-body:JSON.stringify(data)
-})
-
-.then(res=>res.text())
-.then(()=>{
-alert("Data tersimpan");
-loadData();
-})
+});
 
 }
 
@@ -348,11 +276,7 @@ const { jsPDF } = window.jspdf;
 
 let doc=new jsPDF();
 
-doc.setFontSize(16);
-doc.text("LAPORAN KAS RT 07",105,20,{align:"center"});
-
-doc.setFontSize(11);
-doc.text("Perumahan Bumi Indah Citty",105,27,{align:"center"});
+doc.text("Laporan Kas RT 07",105,20,{align:"center"});
 
 let rows=[];
 
@@ -372,34 +296,40 @@ td[4].innerText
 
 doc.autoTable({
 
-startY:40,
+startY:30,
 
 head:[["Tanggal","Keterangan","Masuk","Keluar","Saldo"]],
 
-body:rows,
-
-styles:{fontSize:9},
-
-headStyles:{fillColor:[47,128,237]},
-
-columnStyles:{
-2:{halign:"right"},
-3:{halign:"right"},
-4:{halign:"right"}
-}
+body:rows
 
 });
 
-doc.text("Bendahara RT 07",150,doc.lastAutoTable.finalY+20);
-doc.text("(___Abdul Goni__)",150,doc.lastAutoTable.finalY+35);
+let y=doc.lastAutoTable.finalY+30;
 
-doc.save("Laporan_Kas_RT07.pdf");
+doc.text("Ketua RT 07",20,y);
+doc.text("(Nama Pak RT)",20,y+20);
+
+doc.text("Bendahara",140,y);
+doc.text("(Nama Bendahara)",140,y+20);
+
+doc.save("LaporanKasRT07.pdf");
+
+}
+
+function login(){
+
+let user=prompt("Username");
+let pass=prompt("Password");
+
+if(user=="admin" && pass=="12345"){
+alert("Login berhasil");
+}else{
+alert("Login gagal");
+}
 
 }
 
 loadData();
-
-setInterval(loadData,5000);
 
 </script>
 
