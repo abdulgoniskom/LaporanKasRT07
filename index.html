@@ -1,215 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard Kas RT 07</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Kas RT 07 PRO</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-
-body{
-font-family:Arial;
-margin:0;
-background:#eef2f7;
-}
-
-header{
-background:#2f80ed;
-color:white;
-padding:15px;
-text-align:center;
-}
-
-.container{
-padding:15px;
-max-width:1000px;
-margin:auto;
-}
-
-.card{
-background:white;
-padding:15px;
-border-radius:12px;
-margin-bottom:15px;
-box-shadow:0 4px 8px rgba(0,0,0,0.1);
-}
-
-button{
-background:#2f80ed;
-color:white;
-border:none;
-padding:8px 12px;
-border-radius:6px;
-cursor:pointer;
-}
-
-button.hapus{
-background:#e74c3c;
-}
-
-button.edit{
-background:#f39c12;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-font-size:14px;
-}
-
-th{
-background:#2f80ed;
-color:white;
-padding:8px;
-}
-
-td{
-padding:8px;
-border-bottom:1px solid #ddd;
-text-align:center;
-}
-
-.masuk{
-color:green;
-font-weight:bold;
-}
-
-.keluar{
-color:red;
-font-weight:bold;
-}
-
-.bottomMenu{
-position:fixed;
-bottom:0;
-width:100%;
-background:white;
-display:flex;
-justify-content:space-around;
-border-top:1px solid #ddd;
-padding:8px;
-}
-
-.bottomMenu button{
-background:none;
-color:#2f80ed;
-font-weight:bold;
-}
-
+body { font-family: Arial, sans-serif; margin:0; background:#eef2f7; }
+header { background: linear-gradient(90deg,#2f80ed,#56CCF2); color:white; padding:15px; text-align:center; position:relative; }
+header img { position:absolute; left:15px; top:10px; width:40px; }
+.container { padding:15px; max-width:1000px; margin:auto; }
+.card { background:white; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+.card h3 { margin-top:0; }
+button { background:#2f80ed; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+button.hapus{ background:#e74c3c; }
+button.edit{ background:#f39c12; }
+table { width:100%; border-collapse:collapse; font-size:14px; }
+th { background:#2f80ed; color:white; padding:8px; }
+td { padding:8px; border-bottom:1px solid #ddd; text-align:center; }
+tr:hover{background:#f1f1f1;}
+.masuk{ color:green; font-weight:bold; }
+.keluar{ color:red; font-weight:bold; }
+.modal { display:none; position:fixed; z-index:10; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.5); }
+.modal-content { background:white; margin:10% auto; padding:20px; border-radius:10px; width:90%; max-width:400px; }
+.modal input, .modal select { width:100%; padding:8px; margin:5px 0; }
+.bottomMenu{ position:fixed; bottom:0; width:100%; background:white; display:flex; justify-content:space-around; border-top:1px solid #ddd; padding:8px; }
+.bottomMenu button{ background:none; color:#2f80ed; font-weight:bold; }
 </style>
 </head>
 
 <body>
 
 <header>
-<h2>Kas RT 07 Bumi Indah Citty</h2>
+<img src="https://via.placeholder.com/40" alt="Logo RT">
+<h2>Dashboard Kas RT 07</h2>
 </header>
 
 <div class="container">
 
+<!-- FILTER & SALDO -->
 <div class="card">
-
-<select id="pilihKas">
-<option value="Kas_RT">Kas RT</option>
-<option value="Kas_Agustusan">Kas Agustusan</option>
-</select>
-
+<select id="pilihKas"></select>
 <select id="filter">
 <option value="bulan">Per Bulan</option>
 <option value="3bulan">3 Bulan</option>
 <option value="tahun">Tahunan</option>
 </select>
-
 <button onclick="loadData()">Refresh</button>
-
 <h3 id="saldo">Saldo : Rp 0</h3>
-
 </div>
 
-
+<!-- TABEL TRANSAKSI -->
 <div class="card">
-
 <input type="text" id="search" placeholder="Cari transaksi..." onkeyup="cariData()">
-
 <table>
-
 <thead>
-<tr>
-<th>Tanggal</th>
-<th>Keterangan</th>
-<th>Masuk</th>
-<th>Keluar</th>
-<th>Saldo</th>
-<th>Aksi</th>
-</tr>
+<tr><th>Tanggal</th><th>Keterangan</th><th>Masuk</th><th>Keluar</th><th>Saldo</th><th>Aksi</th></tr>
 </thead>
-
 <tbody id="tabelKas"></tbody>
-
 </table>
-
 </div>
 
-
+<!-- GRAFIK KAS -->
 <div class="card">
-
 <h3>Grafik Kas</h3>
 <canvas id="chartKas"></canvas>
-
 </div>
 
 </div>
 
+<!-- MODAL TAMBAH/EDIT -->
+<div class="modal" id="modalTransaksi">
+<div class="modal-content">
+<h3 id="modalTitle">Tambah Transaksi</h3>
+<input type="date" id="modalTanggal">
+<input type="text" id="modalKet" placeholder="Keterangan">
+<input type="number" id="modalMasuk" placeholder="Kas Masuk">
+<input type="number" id="modalKeluar" placeholder="Kas Keluar">
+<button onclick="simpanModal()">Simpan</button>
+<button onclick="closeModal()">Batal</button>
+</div>
+</div>
+
+<!-- BOTTOM MENU -->
 <div class="bottomMenu">
-
 <button onclick="login()">Login</button>
-<button onclick="tambah()">Tambah</button>
+<button onclick="openModal()">Tambah</button>
 <button onclick="cetakPDF()">PDF</button>
-
 </div>
 
 <script>
+const API="https://script.google.com/macros/s/AKfycbyKyC3XPIVz60KF1wO7xeFWwKcAN6wgJRN-BL81rQBRZsRnK8lmzRl--UY3e5Z0OfQ/exec";
 
-const API="URL_APPS_SCRIPT_ANDA";
-
-let chart;
-let dataKas=[];
-
-function rupiah(n){
-return "Rp "+Number(n).toLocaleString("id-ID");
-}
+let dataKas=[], chart, editIndex=null;
+function rupiah(n){return "Rp "+Number(n).toLocaleString("id-ID");}
 
 function loadData(){
-
-let sheet=document.getElementById("pilihKas").value;
-
-fetch(API+"?sheet="+sheet)
-
+let kas = document.getElementById("pilihKas").value;
+fetch(API+"?sheet="+kas)
 .then(r=>r.json())
-
 .then(data=>{
-
 dataKas=data;
-
-let html="";
-let saldo=0;
-
-let totalMasuk=0;
-let totalKeluar=0;
-
+let html="", saldo=0, totalMasuk=0, totalKeluar=0;
 data.forEach((d,i)=>{
-
 saldo+=Number(d.masuk)-Number(d.keluar);
-
 totalMasuk+=Number(d.masuk);
 totalKeluar+=Number(d.keluar);
-
-html+=`
-<tr>
+html+=`<tr>
 <td>${new Date(d.tanggal).toLocaleDateString("id-ID")}</td>
 <td>${d.keterangan}</td>
 <td class="masuk">${rupiah(d.masuk)}</td>
@@ -218,120 +119,95 @@ html+=`
 <td>
 <button class="edit" onclick="edit(${i})">Edit</button>
 <button class="hapus" onclick="hapus(${i})">Hapus</button>
-</td>
-</tr>
-`;
-
+</td></tr>`;
 });
-
 document.getElementById("tabelKas").innerHTML=html;
-
 document.getElementById("saldo").innerHTML="Saldo : "+rupiah(saldo);
-
 grafik(totalMasuk,totalKeluar);
-
-})
-
+});
 }
 
 function grafik(masuk,keluar){
-
 if(chart) chart.destroy();
-
-chart=new Chart(document.getElementById("chartKas"),{
-
-type:"bar",
-
-data:{
-
-labels:["Pemasukan","Pengeluaran"],
-
-datasets:[{
-
-data:[masuk,keluar]
-
-}]
-
-}
-
-})
-
+chart=new Chart(document.getElementById("chartKas"),{type:"doughnut",data:{labels:["Pemasukan","Pengeluaran"],datasets:[{data:[masuk,keluar],backgroundColor:["#2ecc71","#e74c3c"]}]},options:{responsive:true}});
 }
 
 function cariData(){
-
 let input=document.getElementById("search").value.toLowerCase();
-
 document.querySelectorAll("#tabelKas tr").forEach(tr=>{
-
 tr.style.display=tr.innerText.toLowerCase().includes(input)?"":"none";
-
 });
-
 }
 
-function cetakPDF(){
+function openModal(){
+document.getElementById("modalTransaksi").style.display="block";
+document.getElementById("modalTitle").innerText="Tambah Transaksi";
+editIndex=null;
+document.getElementById("modalTanggal").value="";
+document.getElementById("modalKet").value="";
+document.getElementById("modalMasuk").value="";
+document.getElementById("modalKeluar").value="";
+}
 
-const { jsPDF } = window.jspdf;
+function closeModal(){document.getElementById("modalTransaksi").style.display="none";}
 
-let doc=new jsPDF();
+function simpanModal(){
+let sheet=document.getElementById("pilihKas").value;
+let data={sheet:sheet,tanggal:document.getElementById("modalTanggal").value,keterangan:document.getElementById("modalKet").value,masuk:document.getElementById("modalMasuk").value,keluar:document.getElementById("modalKeluar").value};
+if(editIndex!==null){data.index=editIndex;}
+fetch(API,{method:"POST",body:JSON.stringify(data)}).then(r=>r.text()).then(()=>{loadData();closeModal();});
+}
 
-doc.text("Laporan Kas RT 07",105,20,{align:"center"});
+function edit(i){
+editIndex=i;
+document.getElementById("modalTransaksi").style.display="block";
+document.getElementById("modalTitle").innerText="Edit Transaksi";
+document.getElementById("modalTanggal").value=dataKas[i].tanggal;
+document.getElementById("modalKet").value=dataKas[i].keterangan;
+document.getElementById("modalMasuk").value=dataKas[i].masuk;
+document.getElementById("modalKeluar").value=dataKas[i].keluar;
+}
 
-let rows=[];
-
-document.querySelectorAll("#tabelKas tr").forEach(tr=>{
-
-let td=tr.querySelectorAll("td");
-
-rows.push([
-td[0].innerText,
-td[1].innerText,
-td[2].innerText,
-td[3].innerText,
-td[4].innerText
-]);
-
-});
-
-doc.autoTable({
-
-startY:30,
-
-head:[["Tanggal","Keterangan","Masuk","Keluar","Saldo"]],
-
-body:rows
-
-});
-
-let y=doc.lastAutoTable.finalY+30;
-
-doc.text("Ketua RT 07",20,y);
-doc.text("(Nama Pak RT)",20,y+20);
-
-doc.text("Bendahara",140,y);
-doc.text("(Nama Bendahara)",140,y+20);
-
-doc.save("LaporanKasRT07.pdf");
-
+function hapus(i){
+if(confirm("Hapus transaksi ini?")){
+let sheet=document.getElementById("pilihKas").value;
+fetch(API,{method:"DELETE",body:JSON.stringify({sheet:sheet,index:i})}).then(r=>r.text()).then(()=>{loadData();});
+}
 }
 
 function login(){
-
 let user=prompt("Username");
 let pass=prompt("Password");
-
-if(user=="admin" && pass=="12345"){
-alert("Login berhasil");
-}else{
-alert("Login gagal");
+if(user=="admin" && pass=="12345"){alert("Login berhasil");}else{alert("Login gagal");}
 }
 
+function cetakPDF(){
+const { jsPDF } = window.jspdf;
+let doc=new jsPDF();
+doc.text("Laporan Kas RT 07",105,20,{align:"center"});
+let rows=[];
+document.querySelectorAll("#tabelKas tr").forEach(tr=>{
+let td=tr.querySelectorAll("td");
+rows.push([td[0].innerText,td[1].innerText,td[2].innerText,td[3].innerText,td[4].innerText]);
+});
+doc.autoTable({startY:30, head:[["Tanggal","Keterangan","Masuk","Keluar","Saldo"]], body:rows, styles:{fontSize:9}, headStyles:{fillColor:[47,128,237]}});
+let totalMasuk=0,totalKeluar=0;
+rows.forEach(r=>{totalMasuk+=Number(r[2].replace(/[^0-9]/g,"")); totalKeluar+=Number(r[3].replace(/[^0-9]/g,""));});
+doc.text("Total Pemasukan : Rp "+totalMasuk.toLocaleString("id-ID"),14,doc.lastAutoTable.finalY+10);
+doc.text("Total Pengeluaran : Rp "+totalKeluar.toLocaleString("id-ID"),14,doc.lastAutoTable.finalY+16);
+let saldo=totalMasuk-totalKeluar;
+doc.text("Saldo Akhir : Rp "+saldo.toLocaleString("id-ID"),14,doc.lastAutoTable.finalY+22);
+let y=doc.lastAutoTable.finalY+40;
+doc.text("Karawang, "+new Date().toLocaleDateString("id-ID"),140,y-10);
+doc.text("Mengetahui,",20,y);
+doc.text("Ketua RT 07",20,y+10);
+doc.text("(Nama Pak RT)",20,y+30);
+doc.text("Bendahara RT 07",140,y+10);
+doc.text("(Nama Bendahara)",140,y+30);
+doc.save("LaporanKasRT07.pdf");
 }
 
-loadData();
-
+window.onload=loadData;
 </script>
-
 </body>
 </html>
