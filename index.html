@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -92,11 +91,8 @@ display:none;
 <div class="card">
 
 <select id="pilihKas" onchange="loadData()">
-
 <option value="Kas_RT">Kas RT</option>
-
 <option value="Kas_Agustus">Kas Agustusan</option>
-
 </select>
 
 <h3 id="saldo">Saldo : Rp 0</h3>
@@ -112,7 +108,6 @@ display:none;
 </div>
 
 </div>
-
 
 <div class="card formInput" id="formInput">
 
@@ -130,7 +125,6 @@ display:none;
 
 </div>
 
-
 <div class="card">
 
 <input type="text" id="search" placeholder="Cari transaksi..." onkeyup="cariData()">
@@ -138,7 +132,6 @@ display:none;
 <table>
 
 <thead>
-
 <tr>
 <th>Tanggal</th>
 <th>Keterangan</th>
@@ -146,7 +139,6 @@ display:none;
 <th>Keluar</th>
 <th>Saldo</th>
 </tr>
-
 </thead>
 
 <tbody id="tabelKas"></tbody>
@@ -154,7 +146,6 @@ display:none;
 </table>
 
 </div>
-
 
 <div class="card">
 
@@ -166,19 +157,16 @@ display:none;
 
 </div>
 
-
 <script>
 
 const API="https://script.google.com/macros/s/AKfycbz6HfCsU3ctcsI0okHuMAqCMNkmnY3sfZZAbgu8iY2KIEe-csoZCFA1fePDXcUMVxU/exec";
 
 let admin=false;
-
 let chart;
 
 document.getElementById("loginBtn").onclick=function(){
 
 let user=prompt("Username");
-
 let pass=prompt("Password");
 
 if(user==="admin" && pass==="12345"){
@@ -199,7 +187,6 @@ alert("Login gagal");
 
 }
 
-
 document.getElementById("logoutBtn").onclick=function(){
 
 admin=false;
@@ -212,8 +199,6 @@ document.getElementById("logoutBtn").style.display="none";
 
 }
 
-
-
 function loadData(){
 
 let sheet=document.getElementById("pilihKas").value;
@@ -225,35 +210,32 @@ fetch(API+"?sheet="+sheet)
 .then(data=>{
 
 let html="";
-
 let saldo=0;
 
 let bulan={};
 
+// hitung saldo dari data lama
+data.forEach(d=>{
+saldo+=Number(d.masuk)-Number(d.keluar);
+d.saldo=saldo;
+});
+
+// balik urutan supaya transaksi terbaru di atas
+data.reverse();
+
 data.forEach(d=>{
 
-saldo+=Number(d.masuk)-Number(d.keluar);
-
 let tgl=new Date(d.tanggal);
-
 tgl=isNaN(tgl)?"-":tgl.toLocaleDateString("id-ID");
 
 html+=`
-
 <tr>
-
 <td>${tgl}</td>
-
 <td>${d.keterangan}</td>
-
 <td>${d.masuk}</td>
-
 <td>${d.keluar}</td>
-
-<td>${saldo}</td>
-
+<td>${d.saldo}</td>
 </tr>
-
 `;
 
 let m=new Date(d.tanggal).getMonth()+1;
@@ -272,11 +254,9 @@ grafikBulanan(bulan);
 
 }
 
-
 function grafikBulanan(data){
 
 let labels=Object.keys(data);
-
 let values=Object.values(data);
 
 if(chart) chart.destroy();
@@ -286,26 +266,16 @@ chart=new Chart(document.getElementById("chartKas"),{
 type:"bar",
 
 data:{
-
 labels:labels,
-
 datasets:[{
-
 label:"Kas per Bulan",
-
-data:values,
-
-borderWidth:1
-
+data:values
 }]
-
 }
 
 })
 
 }
-
-
 
 function cariData(){
 
@@ -323,47 +293,31 @@ r.style.display=text.includes(input)?"":"none";
 
 }
 
-
-
 function simpan(){
 
 let sheet=document.getElementById("pilihKas").value;
 
 let data={
-
 sheet:sheet,
-
 tanggal:document.getElementById("tanggal").value,
-
 keterangan:document.getElementById("ket").value,
-
 masuk:document.getElementById("masuk").value,
-
 keluar:document.getElementById("keluar").value
-
 }
 
 fetch(API,{
-
 method:"POST",
-
 body:JSON.stringify(data)
-
 })
 
 .then(res=>res.text())
 
 .then(()=>{
-
 alert("Data tersimpan");
-
 loadData();
-
 })
 
 }
-
-
 
 function cetakPDF(){
 
@@ -378,17 +332,13 @@ let rows=document.querySelectorAll("#tabelKas tr");
 let y=30;
 
 rows.forEach(r=>{
-
 doc.text(r.innerText,20,y);
-
 y+=10;
-
 });
 
 doc.save("laporan-kas.pdf");
 
 }
-
 
 loadData();
 
