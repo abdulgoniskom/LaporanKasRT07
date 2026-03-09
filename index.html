@@ -1,31 +1,52 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Laporan Kas RT</title>
+
+<title>Dashboard Kas RT</title>
+
+<meta name="theme-color" content="#2f80ed">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 
 body{
 font-family:Arial;
-background:#f4f6f8;
-padding:20px;
+margin:0;
+background:#eef2f7;
+}
+
+header{
+background:#2f80ed;
+color:white;
+padding:15px;
+text-align:center;
 }
 
 .container{
-max-width:900px;
-margin:auto;
-background:white;
 padding:20px;
+max-width:1000px;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:15px;
 border-radius:10px;
+margin-bottom:20px;
+box-shadow:0 4px 8px rgba(0,0,0,0.1);
 }
 
 button{
-padding:10px 15px;
 background:#2f80ed;
 color:white;
 border:none;
+padding:8px 12px;
 border-radius:5px;
 cursor:pointer;
 }
@@ -34,21 +55,24 @@ cursor:pointer;
 background:red;
 }
 
-.formInput{
-display:none;
-margin-top:20px;
-}
-
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:20px;
 }
 
 th,td{
 border-bottom:1px solid #ddd;
-padding:10px;
+padding:8px;
 text-align:center;
+}
+
+input,select{
+padding:8px;
+margin:5px;
+}
+
+.formInput{
+display:none;
 }
 
 </style>
@@ -57,9 +81,15 @@ text-align:center;
 
 <body>
 
+<header>
+
+<h2>Dashboard Kas RT</h2>
+
+</header>
+
 <div class="container">
 
-<h2>Laporan Kas RT & Agustusan</h2>
+<div class="card">
 
 <select id="pilihKas" onchange="loadData()">
 
@@ -69,7 +99,7 @@ text-align:center;
 
 </select>
 
-<h3 id="saldo"></h3>
+<h3 id="saldo">Saldo : Rp 0</h3>
 
 <div style="text-align:right">
 
@@ -77,10 +107,14 @@ text-align:center;
 
 <button id="logoutBtn" class="logout" style="display:none">Logout</button>
 
+<button onclick="cetakPDF()">Export PDF</button>
+
+</div>
+
 </div>
 
 
-<div id="formInput" class="formInput">
+<div class="card formInput" id="formInput">
 
 <h3>Input Transaksi</h3>
 
@@ -97,22 +131,20 @@ text-align:center;
 </div>
 
 
+<div class="card">
+
+<input type="text" id="search" placeholder="Cari transaksi..." onkeyup="cariData()">
+
 <table>
 
 <thead>
 
 <tr>
-
 <th>Tanggal</th>
-
 <th>Keterangan</th>
-
 <th>Masuk</th>
-
 <th>Keluar</th>
-
 <th>Saldo</th>
-
 </tr>
 
 </thead>
@@ -124,13 +156,24 @@ text-align:center;
 </div>
 
 
+<div class="card">
+
+<h3>Grafik Kas per Bulan</h3>
+
+<canvas id="chartKas"></canvas>
+
+</div>
+
+</div>
+
+
 <script>
 
-const API="https://script.google.com/macros/s/AKfycby2HGDOInUrZjc4LVwmbbhmm9AdSroYe_Ms3AajMxSYnYe6BMy_3Kw4fnmb9W90jkA/exec";
+const API="https://script.google.com/macros/s/AKfycbz6HfCsU3ctcsI0okHuMAqCMNkmnY3sfZZAbgu8iY2KIEe-csoZCFA1fePDXcUMVxU/exec";
 
 let admin=false;
 
-
+let chart;
 
 document.getElementById("loginBtn").onclick=function(){
 
@@ -148,16 +191,13 @@ document.getElementById("loginBtn").style.display="none";
 
 document.getElementById("logoutBtn").style.display="inline";
 
-}
-
-else{
+}else{
 
 alert("Login gagal");
 
 }
 
 }
-
 
 
 document.getElementById("logoutBtn").onclick=function(){
@@ -188,6 +228,8 @@ let html="";
 
 let saldo=0;
 
+let bulan={};
+
 data.forEach(d=>{
 
 saldo+=Number(d.masuk)-Number(d.keluar);
@@ -214,11 +256,68 @@ html+=`
 
 `;
 
+let m=new Date(d.tanggal).getMonth()+1;
+
+bulan[m]=(bulan[m]||0)+(Number(d.masuk)-Number(d.keluar));
+
 });
 
 document.getElementById("tabelKas").innerHTML=html;
 
 document.getElementById("saldo").innerHTML="Saldo : Rp "+saldo;
+
+grafikBulanan(bulan);
+
+})
+
+}
+
+
+function grafikBulanan(data){
+
+let labels=Object.keys(data);
+
+let values=Object.values(data);
+
+if(chart) chart.destroy();
+
+chart=new Chart(document.getElementById("chartKas"),{
+
+type:"bar",
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:"Kas per Bulan",
+
+data:values,
+
+borderWidth:1
+
+}]
+
+}
+
+})
+
+}
+
+
+
+function cariData(){
+
+let input=document.getElementById("search").value.toLowerCase();
+
+let rows=document.querySelectorAll("#tabelKas tr");
+
+rows.forEach(r=>{
+
+let text=r.innerText.toLowerCase();
+
+r.style.display=text.includes(input)?"":"none";
 
 })
 
@@ -244,8 +343,6 @@ keluar:document.getElementById("keluar").value
 
 }
 
-
-
 fetch(API,{
 
 method:"POST",
@@ -266,6 +363,31 @@ loadData();
 
 }
 
+
+
+function cetakPDF(){
+
+const { jsPDF } = window.jspdf;
+
+let doc=new jsPDF();
+
+doc.text("Laporan Kas RT",20,20);
+
+let rows=document.querySelectorAll("#tabelKas tr");
+
+let y=30;
+
+rows.forEach(r=>{
+
+doc.text(r.innerText,20,y);
+
+y+=10;
+
+});
+
+doc.save("laporan-kas.pdf");
+
+}
 
 
 loadData();
