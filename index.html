@@ -3,13 +3,9 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Dashboard Kas RT</title>
 
-<meta name="theme-color" content="#2f80ed">
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
@@ -65,6 +61,16 @@ padding:8px;
 text-align:center;
 }
 
+.masuk{
+color:green;
+font-weight:bold;
+}
+
+.keluar{
+color:red;
+font-weight:bold;
+}
+
 input,select{
 padding:8px;
 margin:5px;
@@ -81,9 +87,7 @@ display:none;
 <body>
 
 <header>
-
 <h2>Dashboard Kas RT</h2>
-
 </header>
 
 <div class="container">
@@ -95,15 +99,29 @@ display:none;
 <option value="Kas_Agustus">Kas Agustusan</option>
 </select>
 
+<select id="filterBulan" onchange="loadData()">
+<option value="">Semua Bulan</option>
+<option value="1">Januari</option>
+<option value="2">Februari</option>
+<option value="3">Maret</option>
+<option value="4">April</option>
+<option value="5">Mei</option>
+<option value="6">Juni</option>
+<option value="7">Juli</option>
+<option value="8">Agustus</option>
+<option value="9">September</option>
+<option value="10">Oktober</option>
+<option value="11">November</option>
+<option value="12">Desember</option>
+</select>
+
 <h3 id="saldo">Saldo : Rp 0</h3>
 
 <div style="text-align:right">
 
 <button id="loginBtn">Login Admin</button>
-
 <button id="logoutBtn" class="logout" style="display:none">Logout</button>
-
-<button onclick="cetakPDF()">Export PDF</button>
+<button onclick="cetakPDF()">Cetak PDF</button>
 
 </div>
 
@@ -114,11 +132,8 @@ display:none;
 <h3>Input Transaksi</h3>
 
 <input type="date" id="tanggal">
-
 <input type="text" id="ket" placeholder="Keterangan">
-
 <input type="number" id="masuk" placeholder="Kas Masuk">
-
 <input type="number" id="keluar" placeholder="Kas Keluar">
 
 <button onclick="simpan()">Simpan</button>
@@ -149,7 +164,7 @@ display:none;
 
 <div class="card">
 
-<h3>Grafik Kas per Bulan</h3>
+<h3>Grafik Pemasukan vs Pengeluaran</h3>
 
 <canvas id="chartKas"></canvas>
 
@@ -159,10 +174,14 @@ display:none;
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbz6HfCsU3ctcsI0okHuMAqCMNkmnY3sfZZAbgu8iY2KIEe-csoZCFA1fePDXcUMVxU/exec";
+const API="https://script.google.com/macros/s/AKfycbw6F3TTzWFggrgZTGIrzCTjjUMW4kZdvZPyGp89aigYcob5Xuv6DUUXq8uwllB5PfA/exec";
 
 let admin=false;
 let chart;
+
+function rupiah(angka){
+return "Rp " + Number(angka).toLocaleString("id-ID");
+}
 
 document.getElementById("loginBtn").onclick=function(){
 
@@ -174,9 +193,7 @@ if(user==="admin" && pass==="12345"){
 admin=true;
 
 document.getElementById("formInput").style.display="block";
-
 document.getElementById("loginBtn").style.display="none";
-
 document.getElementById("logoutBtn").style.display="inline";
 
 }else{
@@ -192,9 +209,7 @@ document.getElementById("logoutBtn").onclick=function(){
 admin=false;
 
 document.getElementById("formInput").style.display="none";
-
 document.getElementById("loginBtn").style.display="inline";
-
 document.getElementById("logoutBtn").style.display="none";
 
 }
@@ -202,6 +217,7 @@ document.getElementById("logoutBtn").style.display="none";
 function loadData(){
 
 let sheet=document.getElementById("pilihKas").value;
+let bulanFilter=document.getElementById("filterBulan").value;
 
 fetch(API+"?sheet="+sheet)
 
@@ -212,65 +228,74 @@ fetch(API+"?sheet="+sheet)
 let html="";
 let saldo=0;
 
-let bulan={};
+let totalMasuk=0;
+let totalKeluar=0;
 
-// hitung saldo dari data lama
 data.forEach(d=>{
+
+let bulan=new Date(d.tanggal).getMonth()+1;
+
+if(bulanFilter && bulan!=bulanFilter) return;
+
 saldo+=Number(d.masuk)-Number(d.keluar);
+
 d.saldo=saldo;
+
 });
 
-// balik urutan supaya transaksi terbaru di atas
 data.reverse();
 
 data.forEach(d=>{
 
-let tgl=new Date(d.tanggal);
-tgl=isNaN(tgl)?"-":tgl.toLocaleDateString("id-ID");
+let bulan=new Date(d.tanggal).getMonth()+1;
+
+if(bulanFilter && bulan!=bulanFilter) return;
+
+let tgl=new Date(d.tanggal).toLocaleDateString("id-ID");
+
+totalMasuk+=Number(d.masuk);
+totalKeluar+=Number(d.keluar);
 
 html+=`
 <tr>
 <td>${tgl}</td>
 <td>${d.keterangan}</td>
-<td>${d.masuk}</td>
-<td>${d.keluar}</td>
-<td>${d.saldo}</td>
+<td class="masuk">${rupiah(d.masuk)}</td>
+<td class="keluar">${rupiah(d.keluar)}</td>
+<td>${rupiah(d.saldo)}</td>
 </tr>
 `;
-
-let m=new Date(d.tanggal).getMonth()+1;
-
-bulan[m]=(bulan[m]||0)+(Number(d.masuk)-Number(d.keluar));
 
 });
 
 document.getElementById("tabelKas").innerHTML=html;
 
-document.getElementById("saldo").innerHTML="Saldo : Rp "+saldo;
+document.getElementById("saldo").innerHTML="Saldo : "+rupiah(saldo);
 
-grafikBulanan(bulan);
+grafik(totalMasuk,totalKeluar);
 
 })
 
 }
 
-function grafikBulanan(data){
-
-let labels=Object.keys(data);
-let values=Object.values(data);
+function grafik(masuk,keluar){
 
 if(chart) chart.destroy();
 
 chart=new Chart(document.getElementById("chartKas"),{
 
-type:"bar",
+type:"doughnut",
 
 data:{
-labels:labels,
+
+labels:["Pemasukan","Pengeluaran"],
+
 datasets:[{
-label:"Kas per Bulan",
-data:values
+
+data:[masuk,keluar]
+
 }]
+
 }
 
 })
@@ -298,11 +323,13 @@ function simpan(){
 let sheet=document.getElementById("pilihKas").value;
 
 let data={
+
 sheet:sheet,
 tanggal:document.getElementById("tanggal").value,
 keterangan:document.getElementById("ket").value,
 masuk:document.getElementById("masuk").value,
 keluar:document.getElementById("keluar").value
+
 }
 
 fetch(API,{
@@ -311,7 +338,6 @@ body:JSON.stringify(data)
 })
 
 .then(res=>res.text())
-
 .then(()=>{
 alert("Data tersimpan");
 loadData();
