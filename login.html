@@ -3,7 +3,6 @@
 <head>
 
 <title>Login Kas RT</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -17,7 +16,7 @@ align-items:center;
 height:100vh;
 }
 
-.card{
+.box{
 background:white;
 padding:30px;
 border-radius:10px;
@@ -46,9 +45,9 @@ border-radius:5px;
 
 <body>
 
-<div class="card">
+<div class="box">
 
-<h2>Login Kas RT</h2>
+<h2>Login Dashboard Kas RT</h2>
 
 <input type="text" id="user" placeholder="Username">
 <input type="password" id="pass" placeholder="Password">
@@ -61,10 +60,10 @@ border-radius:5px;
 
 function login(){
 
-let u=document.getElementById("user").value;
-let p=document.getElementById("pass").value;
+let user=document.getElementById("user").value;
+let pass=document.getElementById("pass").value;
 
-if(u=="admin" && p=="12345"){
+if(user=="admin" && pass=="12345"){
 
 localStorage.setItem("login","true");
 localStorage.setItem("role","admin");
@@ -73,7 +72,7 @@ window.location="index.html";
 
 }
 
-else if(u=="warga" && p=="12345"){
+else if(user=="warga" && pass=="12345"){
 
 localStorage.setItem("login","true");
 localStorage.setItem("role","warga");
@@ -84,7 +83,7 @@ window.location="index.html";
 
 else{
 
-alert("Login salah");
+alert("Login gagal");
 
 }
 
