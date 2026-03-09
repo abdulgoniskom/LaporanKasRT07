@@ -3,8 +3,7 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Kas RT</title>
+<title>Laporan Kas RT</title>
 
 <style>
 
@@ -27,9 +26,9 @@ text-align:center;
 }
 
 button{
-padding:10px 15px;
+padding:10px 16px;
 border:none;
-background:#2e86de;
+background:#2f80ed;
 color:white;
 border-radius:5px;
 cursor:pointer;
@@ -37,6 +36,16 @@ cursor:pointer;
 
 .logout{
 background:red;
+}
+
+.formInput{
+display:none;
+margin-top:20px;
+}
+
+input{
+padding:8px;
+margin:5px;
 }
 
 table{
@@ -51,16 +60,6 @@ border-bottom:1px solid #ddd;
 text-align:center;
 }
 
-.form{
-margin-top:20px;
-display:none;
-}
-
-input{
-padding:8px;
-margin:5px;
-}
-
 </style>
 
 </head>
@@ -71,14 +70,17 @@ margin:5px;
 
 <h2>Laporan Kas RT</h2>
 
-<div id="saldo"></div>
+<h3 id="saldo"></h3>
 
 <div style="text-align:right">
-<button id="loginBtn">Login Admin</button>
-<button id="logoutBtn" class="logout" style="display:none">Logout</button>
+
+<button id="loginBtn">LOGIN ADMIN</button>
+
+<button id="logoutBtn" class="logout" style="display:none">LOGOUT</button>
+
 </div>
 
-<div id="formInput" class="form">
+<div id="formInput" class="formInput">
 
 <h3>Input Transaksi</h3>
 
@@ -90,13 +92,14 @@ margin:5px;
 
 <input type="number" id="keluar" placeholder="Kas Keluar">
 
-<button onclick="simpan()">Simpan</button>
+<button onclick="simpan()">SIMPAN</button>
 
 </div>
 
 <table>
 
 <thead>
+
 <tr>
 <th>Tanggal</th>
 <th>Keterangan</th>
@@ -104,9 +107,10 @@ margin:5px;
 <th>Keluar</th>
 <th>Saldo</th>
 </tr>
+
 </thead>
 
-<tbody id="dataKas"></tbody>
+<tbody id="tabelKas"></tbody>
 
 </table>
 
@@ -114,24 +118,26 @@ margin:5px;
 
 <script>
 
-const urlAPI="https://script.google.com/macros/s/AKfycbwkVogSbjgQFccB5XOMZQ4dJtIKdS0zNEpVjIYlsrTw6HaPtNICYWxD5Qtw5Rc0Lo0/exec";
+const API="https://script.google.com/macros/s/AKfycbxoZrZS4aDmPcxQAfB1d--VSZ_rtmY9iwQoGsu3vM3yqscznh4GXaaN0E2OFaSMO8s/exec";
 
-let isAdmin=false;
+let admin=false;
 
 document.getElementById("loginBtn").onclick=function(){
 
-let user=prompt("Username");
+let user=prompt("Username Admin");
 let pass=prompt("Password");
 
 if(user==="admin" && pass==="12345"){
 
-isAdmin=true;
+admin=true;
 
 document.getElementById("formInput").style.display="block";
 
+document.getElementById("loginBtn").style.display="none";
+
 document.getElementById("logoutBtn").style.display="inline";
 
-document.getElementById("loginBtn").style.display="none";
+alert("Login berhasil");
 
 }
 
@@ -145,21 +151,21 @@ alert("Login gagal");
 
 document.getElementById("logoutBtn").onclick=function(){
 
-isAdmin=false;
+admin=false;
 
 document.getElementById("formInput").style.display="none";
 
-document.getElementById("logoutBtn").style.display="none";
-
 document.getElementById("loginBtn").style.display="inline";
+
+document.getElementById("logoutBtn").style.display="none";
 
 }
 
 function loadData(){
 
-fetch(urlAPI+"?sheet=Kas_RT")
+fetch(API)
 
-.then(r=>r.json())
+.then(res=>res.json())
 
 .then(data=>{
 
@@ -191,9 +197,9 @@ html+=`
 
 });
 
-document.getElementById("dataKas").innerHTML=html;
+document.getElementById("tabelKas").innerHTML=html;
 
-document.getElementById("saldo").innerHTML="<h3>Saldo : Rp "+saldo+"</h3>";
+document.getElementById("saldo").innerHTML="Saldo Kas : Rp "+saldo;
 
 })
 
@@ -213,7 +219,7 @@ keluar:document.getElementById("keluar").value
 
 }
 
-fetch(urlAPI,{
+fetch(API,{
 
 method:"POST",
 
@@ -223,9 +229,9 @@ body:JSON.stringify(data)
 
 .then(r=>r.text())
 
-.then(res=>{
+.then(()=>{
 
-alert("Data tersimpan");
+alert("Data berhasil disimpan");
 
 loadData();
 
