@@ -10,36 +10,42 @@
 
 body{
 font-family:Arial;
-background:#f1f4f9;
+background:#f4f6f9;
 margin:0;
 }
 
-.navbar{
+.header{
 background:#2c7be5;
 color:white;
 padding:15px;
-font-size:20px;
+font-size:22px;
 }
 
 .menu{
-display:flex;
-gap:20px;
-padding:10px;
 background:white;
+padding:10px;
+display:flex;
+gap:10px;
 }
 
-.menu button{
+button{
 padding:10px 20px;
 border:none;
-background:#eee;
+background:#2c7be5;
+color:white;
+border-radius:5px;
 cursor:pointer;
+}
+
+.container{
+padding:20px;
 }
 
 .card{
 background:white;
 padding:20px;
-margin:20px;
 border-radius:10px;
+margin-bottom:20px;
 box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
@@ -54,13 +60,19 @@ border-bottom:1px solid #ddd;
 text-align:center;
 }
 
+.total{
+font-size:20px;
+font-weight:bold;
+margin-bottom:15px;
+}
+
 </style>
 
 </head>
 
 <body>
 
-<div class="navbar">
+<div class="header">
 Dashboard Kas RT
 </div>
 
@@ -69,9 +81,15 @@ Dashboard Kas RT
 <button onclick="loadData('Kas_Agustusan')">Kas Agustusan</button>
 </div>
 
+<div class="container">
+
 <div class="card">
 
-<canvas id="chartKas"></canvas>
+<div class="total">
+Total Saldo : Rp <span id="saldoTotal">0</span>
+</div>
+
+<canvas id="chart"></canvas>
 
 </div>
 
@@ -80,14 +98,13 @@ Dashboard Kas RT
 <table>
 
 <thead>
-
 <tr>
 <th>Tanggal</th>
 <th>Keterangan</th>
 <th>Masuk</th>
 <th>Keluar</th>
+<th>Saldo</th>
 </tr>
-
 </thead>
 
 <tbody id="dataKas"></tbody>
@@ -98,7 +115,7 @@ Dashboard Kas RT
 
 <div class="card">
 
-<h3>Input Data</h3>
+<h3>Input Transaksi</h3>
 
 <input type="date" id="tanggal"><br><br>
 <input type="text" id="ket" placeholder="Keterangan"><br><br>
@@ -109,13 +126,18 @@ Dashboard Kas RT
 
 </div>
 
+</div>
+
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycbzvufHW_uXo2y0g38ESX4Q_oRFVG6rds_dMiUUGzDPQGJBKvfRyef49GcYDniZpAUI/exec";
+const API="https://script.google.com/macros/s/AKfycbxx40R6R21DG4vaPbjrlSP9sZyQfa_nE7LcUdNoPbeevXkhqGo2IuhrAXyePBDSsPM/exec";
 
 let chart;
+let sheetAktif="Kas_RT";
 
 function loadData(sheet){
+
+sheetAktif=sheet;
 
 fetch(API+"?sheet="+sheet)
 
@@ -127,26 +149,36 @@ let tbody=document.getElementById("dataKas");
 
 tbody.innerHTML="";
 
-let masuk=0;
-let keluar=0;
+let masukTotal=0;
+let keluarTotal=0;
+let saldo=0;
 
 data.forEach(d=>{
 
-masuk+=Number(d.masuk||0);
-keluar+=Number(d.keluar||0);
+let masuk = Number(d.masuk || 0);
+let keluar = Number(d.keluar || 0);
+
+saldo = saldo + masuk - keluar;
+
+masukTotal += masuk;
+keluarTotal += keluar;
 
 tbody.innerHTML+=`
 <tr>
 <td>${d.tanggal}</td>
 <td>${d.keterangan}</td>
-<td>${d.masuk}</td>
-<td>${d.keluar}</td>
+<td>${masuk}</td>
+<td>${keluar}</td>
+<td>${saldo}</td>
 </tr>
 `;
 
 });
 
-buatChart(masuk,keluar);
+document.getElementById("saldoTotal").innerText =
+saldo.toLocaleString();
+
+buatChart(masukTotal,keluarTotal);
 
 });
 
@@ -154,12 +186,12 @@ buatChart(masuk,keluar);
 
 function buatChart(masuk,keluar){
 
-let ctx=document.getElementById("chartKas");
-
 if(chart) chart.destroy();
 
-chart=new Chart(ctx,{
+chart=new Chart(document.getElementById("chart"),{
+
 type:"bar",
+
 data:{
 labels:["Pemasukan","Pengeluaran"],
 datasets:[{
@@ -167,6 +199,7 @@ label:"Kas",
 data:[masuk,keluar]
 }]
 }
+
 });
 
 }
@@ -174,21 +207,26 @@ data:[masuk,keluar]
 function kirim(){
 
 let data={
-sheet:"Kas_RT",
+
+sheet:sheetAktif,
 tanggal:document.getElementById("tanggal").value,
 keterangan:document.getElementById("ket").value,
 masuk:document.getElementById("masuk").value,
 keluar:document.getElementById("keluar").value
+
 };
 
 fetch(API,{
 method:"POST",
 body:JSON.stringify(data)
 })
-.then(res=>res.json())
-.then(r=>{
+
+.then(()=>{
+
 alert("Data tersimpan");
-loadData("Kas_RT");
+
+loadData(sheetAktif);
+
 });
 
 }
@@ -199,3 +237,168 @@ loadData("Kas_RT");
 
 </body>
 </html>
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login Bendahara</title>
+
+<style>
+body{
+font-family:Arial;
+background:#f4f6f9;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.card{
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 2px 10px rgba(0,0,0,0.2);
+}
+
+input{
+padding:10px;
+width:200px;
+margin-bottom:10px;
+}
+
+button{
+padding:10px 20px;
+background:#2c7be5;
+color:white;
+border:none;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h3>Login Bendahara</h3>
+
+<input type="password" id="pass" placeholder="Password"><br>
+
+<button onclick="login()">Login</button>
+
+</div>
+
+<script>
+
+function login(){
+
+let password="bendahara123";
+
+if(document.getElementById("pass").value==password){
+
+localStorage.setItem("login","true");
+window.location="index.html";
+
+}else{
+
+alert("Password salah");
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
+
+if(localStorage.getItem("login")!="true"){
+window.location="login.html";
+}
+function rekapBulanan(data){
+
+let bulan={};
+
+data.forEach(d=>{
+
+let tgl=new Date(d.tanggal);
+let key=tgl.getFullYear()+"-"+(tgl.getMonth()+1);
+
+let masuk=Number(d.masuk||0);
+let keluar=Number(d.keluar||0);
+
+if(!bulan[key]){
+
+bulan[key]={masuk:0,keluar:0};
+
+}
+
+bulan[key].masuk+=masuk;
+bulan[key].keluar+=keluar;
+
+});
+
+return bulan;
+
+}
+function grafikBulanan(bulan){
+
+let labels=[];
+let masuk=[];
+let keluar=[];
+
+for(let b in bulan){
+
+labels.push(b);
+masuk.push(bulan[b].masuk);
+keluar.push(bulan[b].keluar);
+
+}
+
+new Chart(document.getElementById("chartBulanan"),{
+
+type:"line",
+
+data:{
+labels:labels,
+datasets:[
+{
+label:"Pemasukan",
+data:masuk
+},
+{
+label:"Pengeluaran",
+data:keluar
+}
+]
+
+}
+
+});
+
+}
+<canvas id="chartBulanan"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<button onclick="downloadPDF()">Download PDF</button>
+function downloadPDF(){
+
+const { jsPDF } = window.jspdf;
+
+let doc = new jsPDF();
+
+doc.text("Laporan Kas RT",20,20);
+
+let rows=document.querySelectorAll("#dataKas tr");
+
+let y=40;
+
+rows.forEach(r=>{
+
+doc.text(r.innerText,20,y);
+
+y+=10;
+
+});
+
+doc.save("laporan-kas.pdf");
+
+}
