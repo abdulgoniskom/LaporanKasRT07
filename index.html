@@ -43,9 +43,9 @@ flex-wrap:wrap;
 
 button{
 padding:10px;
+border:none;
 background:#2c7be5;
 color:white;
-border:none;
 border-radius:5px;
 cursor:pointer;
 }
@@ -126,9 +126,7 @@ Dashboard Kas RT
 <div class="card">
 
 <div class="total">
-
 Saldo Total : Rp <span id="saldoTotal">0</span>
-
 </div>
 
 <canvas id="chart"></canvas>
@@ -174,7 +172,7 @@ Saldo Total : Rp <span id="saldoTotal">0</span>
 
 <script>
 
-const API="LINK_APPS_SCRIPT";
+const API="PASTE_LINK_APPS_SCRIPT";
 
 let chart;
 let sheetAktif="Kas_RT";
@@ -205,8 +203,8 @@ let keluarTotal=0;
 
 data.forEach(d=>{
 
-let masuk=Number(d.masuk || 0);
-let keluar=Number(d.keluar || 0);
+let masuk=Number(d.masuk||0);
+let keluar=Number(d.keluar||0);
 
 saldo+=masuk-keluar;
 
@@ -218,13 +216,11 @@ let tgl=new Date(d.tanggal).toLocaleDateString("id-ID");
 tbody.innerHTML+=`
 
 <tr>
-
 <td>${tgl}</td>
 <td>${d.keterangan}</td>
 <td>${masuk.toLocaleString()}</td>
 <td>${keluar.toLocaleString()}</td>
 <td>${saldo.toLocaleString()}</td>
-
 </tr>
 
 `;
@@ -260,6 +256,11 @@ data:[masuk,keluar]
 }
 
 function kirim(){
+
+if(localStorage.getItem("role")!="admin"){
+alert("Hanya admin yang boleh input transaksi");
+return;
+}
 
 let data={
 
@@ -331,5 +332,3 @@ loadData("Kas_RT");
 
 </body>
 </html>
-
-
