@@ -6,8 +6,10 @@
 <title>Dashboard Kas RT 07 Bumi Indah Citty</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 <style>
 
@@ -60,6 +62,12 @@ th,td{
 border-bottom:1px solid #ddd;
 padding:8px;
 text-align:center;
+font-size:13px;
+}
+
+th{
+background:#2f80ed;
+color:white;
 }
 
 .masuk{
@@ -96,7 +104,7 @@ display:none;
 <div class="card">
 
 <select id="pilihKas" onchange="loadData()">
-<option value="Kas_RT">Kas RT 07</option>
+<option value="Kas_RT">Kas RT</option>
 <option value="Kas_Agustusan">Kas Agustusan</option>
 </select>
 
@@ -114,6 +122,12 @@ display:none;
 <option value="10">Oktober</option>
 <option value="11">November</option>
 <option value="12">Desember</option>
+</select>
+
+<select id="filterPeriode" onchange="loadData()">
+<option value="bulan">Per Bulan</option>
+<option value="3bulan">3 Bulan</option>
+<option value="tahun">1 Tahun</option>
 </select>
 
 <h3 id="saldo">Saldo : Rp 0</h3>
@@ -181,7 +195,7 @@ let admin=false;
 let chart;
 
 function rupiah(angka){
-return "Rp " + Number(angka).toLocaleString("id-ID");
+return "Rp "+Number(angka).toLocaleString("id-ID");
 }
 
 document.getElementById("loginBtn").onclick=function(){
@@ -228,7 +242,6 @@ fetch(API+"?sheet="+sheet)
 
 let html="";
 let saldo=0;
-
 let totalMasuk=0;
 let totalKeluar=0;
 
@@ -239,18 +252,6 @@ let bulan=new Date(d.tanggal).getMonth()+1;
 if(bulanFilter && bulan!=bulanFilter) return;
 
 saldo+=Number(d.masuk)-Number(d.keluar);
-
-d.saldo=saldo;
-
-});
-
-data.reverse();
-
-data.forEach(d=>{
-
-let bulan=new Date(d.tanggal).getMonth()+1;
-
-if(bulanFilter && bulan!=bulanFilter) return;
 
 let tgl=new Date(d.tanggal).toLocaleDateString("id-ID");
 
@@ -263,7 +264,7 @@ html+=`
 <td>${d.keterangan}</td>
 <td class="masuk">${rupiah(d.masuk)}</td>
 <td class="keluar">${rupiah(d.keluar)}</td>
-<td>${rupiah(d.saldo)}</td>
+<td>${rupiah(saldo)}</td>
 </tr>
 `;
 
@@ -305,8 +306,11 @@ let input=document.getElementById("search").value.toLowerCase();
 let rows=document.querySelectorAll("#tabelKas tr");
 
 rows.forEach(r=>{
+
 let text=r.innerText.toLowerCase();
+
 r.style.display=text.includes(input)?"":"none";
+
 })
 
 }
@@ -316,11 +320,13 @@ function simpan(){
 let sheet=document.getElementById("pilihKas").value;
 
 let data={
+
 sheet:sheet,
 tanggal:document.getElementById("tanggal").value,
 keterangan:document.getElementById("ket").value,
 masuk:document.getElementById("masuk").value,
 keluar:document.getElementById("keluar").value
+
 }
 
 fetch(API,{
@@ -339,76 +345,60 @@ loadData();
 function cetakPDF(){
 
 const { jsPDF } = window.jspdf;
+
 let doc=new jsPDF();
 
-doc.setFontSize(18);
-doc.text("LAPORAN KAS RT 07",105,15,{align:"center"});
+doc.setFontSize(16);
+doc.text("LAPORAN KAS RT 07",105,20,{align:"center"});
 
 doc.setFontSize(11);
-doc.text("Perumahan Bumi Indah Citty",105,22,{align:"center"});
+doc.text("Perumahan Bumi Indah Citty",105,27,{align:"center"});
 
-let rows=document.querySelectorAll("#tabelKas tr");
+let rows=[];
 
-let body=[];
+document.querySelectorAll("#tabelKas tr").forEach(tr=>{
 
-let totalMasuk=0;
-let totalKeluar=0;
+let td=tr.querySelectorAll("td");
 
-rows.forEach(r=>{
-
-let col=r.querySelectorAll("td");
-
-if(col.length){
-
-body.push([
-col[0].innerText,
-col[1].innerText,
-col[2].innerText,
-col[3].innerText,
-col[4].innerText
+rows.push([
+td[0].innerText,
+td[1].innerText,
+td[2].innerText,
+td[3].innerText,
+td[4].innerText
 ]);
-
-let masuk=Number(col[2].innerText.replace(/[Rp. ]/g,"")||0);
-let keluar=Number(col[3].innerText.replace(/[Rp. ]/g,"")||0);
-
-totalMasuk+=masuk;
-totalKeluar+=keluar;
-
-}
 
 });
 
 doc.autoTable({
-startY:35,
+
+startY:40,
+
 head:[["Tanggal","Keterangan","Masuk","Keluar","Saldo"]],
-body:body,
-theme:"grid",
-styles:{fontSize:10},
+
+body:rows,
+
+styles:{fontSize:9},
+
+headStyles:{fillColor:[47,128,237]},
+
 columnStyles:{
-1:{halign:"left"},
 2:{halign:"right"},
 3:{halign:"right"},
 4:{halign:"right"}
 }
+
 });
 
-let y=doc.lastAutoTable.finalY+10;
-
-doc.text("Total Pemasukan : Rp "+totalMasuk.toLocaleString("id-ID"),14,y);
-doc.text("Total Pengeluaran : Rp "+totalKeluar.toLocaleString("id-ID"),14,y+6);
-
-let saldo=totalMasuk-totalKeluar;
-
-doc.text("Saldo Akhir : Rp "+saldo.toLocaleString("id-ID"),14,y+12);
-
-doc.text("Bendahara RT 07",150,y+30);
-doc.text("(_________________)",150,y+45);
+doc.text("Bendahara RT 07",150,doc.lastAutoTable.finalY+20);
+doc.text("(________________)",150,doc.lastAutoTable.finalY+35);
 
 doc.save("Laporan_Kas_RT07.pdf");
 
 }
 
 loadData();
+
 setInterval(loadData,5000);
 
 </script>
