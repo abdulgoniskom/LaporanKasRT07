@@ -2,19 +2,27 @@
 <html>
 <head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Dashboard Kas RT</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+<script>
+
+if(localStorage.getItem("login")!="true"){
+window.location="login.html";
+}
+
+</script>
+
 <style>
 
 body{
 font-family:Arial;
-background:#f1f4f9;
+background:#f4f6f9;
 margin:0;
 }
 
@@ -26,18 +34,18 @@ font-size:20px;
 }
 
 .menu{
+background:white;
+padding:10px;
 display:flex;
 gap:10px;
-padding:10px;
 flex-wrap:wrap;
-background:white;
 }
 
 button{
-padding:10px 15px;
-border:none;
+padding:10px;
 background:#2c7be5;
 color:white;
+border:none;
 border-radius:5px;
 cursor:pointer;
 }
@@ -49,8 +57,8 @@ padding:20px;
 .card{
 background:white;
 padding:20px;
-margin-bottom:20px;
 border-radius:10px;
+margin-bottom:20px;
 box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
@@ -60,14 +68,14 @@ border-collapse:collapse;
 }
 
 th,td{
-padding:8px;
+padding:10px;
 border-bottom:1px solid #ddd;
 text-align:center;
 }
 
 input{
-padding:8px;
 width:100%;
+padding:8px;
 margin-bottom:10px;
 }
 
@@ -79,12 +87,12 @@ margin-bottom:10px;
 
 @media(max-width:600px){
 
-table{
-font-size:12px;
-}
-
 .menu{
 flex-direction:column;
+}
+
+table{
+font-size:12px;
 }
 
 }
@@ -96,7 +104,11 @@ flex-direction:column;
 <body>
 
 <div class="header">
+
 Dashboard Kas RT
+
+<button onclick="logout()" style="float:right;background:red">Logout</button>
+
 </div>
 
 <div class="menu">
@@ -114,7 +126,9 @@ Dashboard Kas RT
 <div class="card">
 
 <div class="total">
+
 Saldo Total : Rp <span id="saldoTotal">0</span>
+
 </div>
 
 <canvas id="chart"></canvas>
@@ -126,6 +140,7 @@ Saldo Total : Rp <span id="saldoTotal">0</span>
 <table>
 
 <thead>
+
 <tr>
 <th>Tanggal</th>
 <th>Keterangan</th>
@@ -133,6 +148,7 @@ Saldo Total : Rp <span id="saldoTotal">0</span>
 <th>Keluar</th>
 <th>Saldo</th>
 </tr>
+
 </thead>
 
 <tbody id="dataKas"></tbody>
@@ -158,10 +174,16 @@ Saldo Total : Rp <span id="saldoTotal">0</span>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbw46x8U4EVaJJWHIpeIzgEZDw54qLgYj0UGm04A09oG7C8lJ8mDLWC38zpybyY831M/exec";
+const API="LINK_APPS_SCRIPT";
 
-let sheetAktif="Kas_RT";
 let chart;
+let sheetAktif="Kas_RT";
+
+let role=localStorage.getItem("role");
+
+if(role=="warga"){
+document.getElementById("formInput").style.display="none";
+}
 
 function loadData(sheet){
 
@@ -194,13 +216,17 @@ keluarTotal+=keluar;
 let tgl=new Date(d.tanggal).toLocaleDateString("id-ID");
 
 tbody.innerHTML+=`
+
 <tr>
+
 <td>${tgl}</td>
 <td>${d.keterangan}</td>
 <td>${masuk.toLocaleString()}</td>
 <td>${keluar.toLocaleString()}</td>
 <td>${saldo.toLocaleString()}</td>
+
 </tr>
+
 `;
 
 });
@@ -251,11 +277,8 @@ body:JSON.stringify(data)
 })
 
 .then(()=>{
-
-alert("Data berhasil disimpan");
-
+alert("Data tersimpan");
 loadData(sheetAktif);
-
 });
 
 }
@@ -283,21 +306,23 @@ let rows=document.querySelectorAll("#dataKas tr");
 let y=40;
 
 rows.forEach(r=>{
-
 doc.text(r.innerText,20,y);
-
 y+=10;
-
 });
 
 doc.save("laporan_kas.pdf");
 
 }
 
+function logout(){
+
+localStorage.clear();
+window.location="login.html";
+
+}
+
 setInterval(()=>{
-
 loadData(sheetAktif);
-
 },5000);
 
 loadData("Kas_RT");
@@ -306,3 +331,5 @@ loadData("Kas_RT");
 
 </body>
 </html>
+
+
