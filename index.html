@@ -4,70 +4,16 @@
 
 <title>Dashboard Kas RT</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
 if(localStorage.getItem("login")!="true"){
 window.location="login.html";
 }
-
-function rekapBulanan(data){
-
-let bulan={};
-
-data.forEach(d=>{
-
-let tgl=new Date(d.tanggal);
-let key=tgl.getFullYear()+"-"+(tgl.getMonth()+1);
-
-let masuk=Number(d.masuk||0);
-let keluar=Number(d.keluar||0);
-
-if(!bulan[key]){
-bulan[key]={masuk:0,keluar:0};
-}
-
-bulan[key].masuk+=masuk;
-bulan[key].keluar+=keluar;
-
-});
-
-return bulan;
-
-}
-
-function grafikBulanan(bulan){
-
-let labels=[];
-let masuk=[];
-let keluar=[];
-
-for(let b in bulan){
-
-labels.push(b);
-masuk.push(bulan[b].masuk);
-keluar.push(bulan[b].keluar);
-
-}
-
-new Chart(document.getElementById("chartBulanan"),{
-
-type:"line",
-
-data:{
-labels:labels,
-datasets:[
-{label:"Pemasukan",data:masuk},
-{label:"Pengeluaran",data:keluar}
-]
-
-}
-
-});
-
-}
-
 </script>
-<style>
 
+<style>
 body{
 font-family:Arial;
 background:#f4f6f9;
@@ -125,7 +71,6 @@ font-size:20px;
 font-weight:bold;
 margin-bottom:15px;
 }
-
 </style>
 
 </head>
@@ -139,24 +84,20 @@ Dashboard Kas RT
 <div class="menu">
 <button onclick="loadData('Kas_RT')">Kas RT</button>
 <button onclick="loadData('Kas_Agustusan')">Kas Agustusan</button>
+<button onclick="downloadPDF()">Download PDF</button>
 </div>
 
 <div class="container">
 
 <div class="card">
-
 <div class="total">
 Total Saldo : Rp <span id="saldoTotal">0</span>
 </div>
-
 <canvas id="chart"></canvas>
-
 </div>
 
 <div class="card">
-
 <table>
-
 <thead>
 <tr>
 <th>Tanggal</th>
@@ -166,11 +107,8 @@ Total Saldo : Rp <span id="saldoTotal">0</span>
 <th>Saldo</th>
 </tr>
 </thead>
-
 <tbody id="dataKas"></tbody>
-
 </table>
-
 </div>
 
 <div class="card">
@@ -282,163 +220,12 @@ body:JSON.stringify(data)
 })
 
 .then(()=>{
-
 alert("Data tersimpan");
-
 loadData(sheetAktif);
-
 });
 
 }
 
-loadData("Kas_RT");
-
-</script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html>
-<head>
-<title>Login Bendahara</title>
-
-<style>
-body{
-font-family:Arial;
-background:#f4f6f9;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-}
-
-.card{
-background:white;
-padding:30px;
-border-radius:10px;
-box-shadow:0 2px 10px rgba(0,0,0,0.2);
-}
-
-input{
-padding:10px;
-width:200px;
-margin-bottom:10px;
-}
-
-button{
-padding:10px 20px;
-background:#2c7be5;
-color:white;
-border:none;
-}
-</style>
-
-</head>
-
-<body>
-
-<div class="card">
-
-<h3>Login Bendahara</h3>
-
-<input type="password" id="pass" placeholder="Password"><br>
-
-<button onclick="login()">Login</button>
-
-</div>
-
-<script>
-
-function login(){
-
-let password="bendahara123";
-
-if(document.getElementById("pass").value==password){
-
-localStorage.setItem("login","true");
-window.location="index.html";
-
-}else{
-
-alert("Password salah");
-
-}
-
-}
-
-</script>
-
-</body>
-</html>
-
-if(localStorage.getItem("login")!="true"){
-window.location="login.html";
-}
-function rekapBulanan(data){
-
-let bulan={};
-
-data.forEach(d=>{
-
-let tgl=new Date(d.tanggal);
-let key=tgl.getFullYear()+"-"+(tgl.getMonth()+1);
-
-let masuk=Number(d.masuk||0);
-let keluar=Number(d.keluar||0);
-
-if(!bulan[key]){
-
-bulan[key]={masuk:0,keluar:0};
-
-}
-
-bulan[key].masuk+=masuk;
-bulan[key].keluar+=keluar;
-
-});
-
-return bulan;
-
-}
-function grafikBulanan(bulan){
-
-let labels=[];
-let masuk=[];
-let keluar=[];
-
-for(let b in bulan){
-
-labels.push(b);
-masuk.push(bulan[b].masuk);
-keluar.push(bulan[b].keluar);
-
-}
-
-new Chart(document.getElementById("chartBulanan"),{
-
-type:"line",
-
-data:{
-labels:labels,
-datasets:[
-{
-label:"Pemasukan",
-data:masuk
-},
-{
-label:"Pengeluaran",
-data:keluar
-}
-]
-
-}
-
-});
-
-}
-<canvas id="chartBulanan"></canvas>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<button onclick="downloadPDF()">Download PDF</button>
 function downloadPDF(){
 
 const { jsPDF } = window.jspdf;
@@ -452,13 +239,17 @@ let rows=document.querySelectorAll("#dataKas tr");
 let y=40;
 
 rows.forEach(r=>{
-
 doc.text(r.innerText,20,y);
-
 y+=10;
-
 });
 
 doc.save("laporan-kas.pdf");
 
 }
+
+loadData("Kas_RT");
+
+</script>
+
+</body>
+</html>
