@@ -21,15 +21,11 @@ padding:20px;
 border-radius:10px;
 }
 
-h2{
-text-align:center;
-}
-
 button{
-padding:10px 16px;
-border:none;
+padding:10px 15px;
 background:#2f80ed;
 color:white;
+border:none;
 border-radius:5px;
 cursor:pointer;
 }
@@ -43,11 +39,6 @@ display:none;
 margin-top:20px;
 }
 
-input{
-padding:8px;
-margin:5px;
-}
-
 table{
 width:100%;
 border-collapse:collapse;
@@ -55,8 +46,8 @@ margin-top:20px;
 }
 
 th,td{
-padding:10px;
 border-bottom:1px solid #ddd;
+padding:10px;
 text-align:center;
 }
 
@@ -68,17 +59,26 @@ text-align:center;
 
 <div class="container">
 
-<h2>Laporan Kas RT</h2>
+<h2>Laporan Kas RT & Agustusan</h2>
+
+<select id="pilihKas" onchange="loadData()">
+
+<option value="Kas_RT">Kas RT</option>
+
+<option value="Kas_Agustus">Kas Agustusan</option>
+
+</select>
 
 <h3 id="saldo"></h3>
 
 <div style="text-align:right">
 
-<button id="loginBtn">LOGIN ADMIN</button>
+<button id="loginBtn">Login Admin</button>
 
-<button id="logoutBtn" class="logout" style="display:none">LOGOUT</button>
+<button id="logoutBtn" class="logout" style="display:none">Logout</button>
 
 </div>
+
 
 <div id="formInput" class="formInput">
 
@@ -92,20 +92,27 @@ text-align:center;
 
 <input type="number" id="keluar" placeholder="Kas Keluar">
 
-<button onclick="simpan()">SIMPAN</button>
+<button onclick="simpan()">Simpan</button>
 
 </div>
+
 
 <table>
 
 <thead>
 
 <tr>
+
 <th>Tanggal</th>
+
 <th>Keterangan</th>
+
 <th>Masuk</th>
+
 <th>Keluar</th>
+
 <th>Saldo</th>
+
 </tr>
 
 </thead>
@@ -116,15 +123,19 @@ text-align:center;
 
 </div>
 
+
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbxoZrZS4aDmPcxQAfB1d--VSZ_rtmY9iwQoGsu3vM3yqscznh4GXaaN0E2OFaSMO8s/exec";
+const API="https://script.google.com/macros/s/AKfycby2HGDOInUrZjc4LVwmbbhmm9AdSroYe_Ms3AajMxSYnYe6BMy_3Kw4fnmb9W90jkA/exec";
 
 let admin=false;
 
+
+
 document.getElementById("loginBtn").onclick=function(){
 
-let user=prompt("Username Admin");
+let user=prompt("Username");
+
 let pass=prompt("Password");
 
 if(user==="admin" && pass==="12345"){
@@ -137,8 +148,6 @@ document.getElementById("loginBtn").style.display="none";
 
 document.getElementById("logoutBtn").style.display="inline";
 
-alert("Login berhasil");
-
 }
 
 else{
@@ -148,6 +157,8 @@ alert("Login gagal");
 }
 
 }
+
+
 
 document.getElementById("logoutBtn").onclick=function(){
 
@@ -161,9 +172,13 @@ document.getElementById("logoutBtn").style.display="none";
 
 }
 
+
+
 function loadData(){
 
-fetch(API)
+let sheet=document.getElementById("pilihKas").value;
+
+fetch(API+"?sheet="+sheet)
 
 .then(res=>res.json())
 
@@ -177,11 +192,15 @@ data.forEach(d=>{
 
 saldo+=Number(d.masuk)-Number(d.keluar);
 
+let tgl=new Date(d.tanggal);
+
+tgl=isNaN(tgl)?"-":tgl.toLocaleDateString("id-ID");
+
 html+=`
 
 <tr>
 
-<td>${new Date(d.tanggal).toLocaleDateString("id-ID")}</td>
+<td>${tgl}</td>
 
 <td>${d.keterangan}</td>
 
@@ -199,15 +218,21 @@ html+=`
 
 document.getElementById("tabelKas").innerHTML=html;
 
-document.getElementById("saldo").innerHTML="Saldo Kas : Rp "+saldo;
+document.getElementById("saldo").innerHTML="Saldo : Rp "+saldo;
 
 })
 
 }
 
+
+
 function simpan(){
 
+let sheet=document.getElementById("pilihKas").value;
+
 let data={
+
+sheet:sheet,
 
 tanggal:document.getElementById("tanggal").value,
 
@@ -219,6 +244,8 @@ keluar:document.getElementById("keluar").value
 
 }
 
+
+
 fetch(API,{
 
 method:"POST",
@@ -227,17 +254,19 @@ body:JSON.stringify(data)
 
 })
 
-.then(r=>r.text())
+.then(res=>res.text())
 
 .then(()=>{
 
-alert("Data berhasil disimpan");
+alert("Data tersimpan");
 
 loadData();
 
 })
 
 }
+
+
 
 loadData();
 
