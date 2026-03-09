@@ -2,21 +2,19 @@
 <html>
 <head>
 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Dashboard Kas RT</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<script>
-if(localStorage.getItem("login")!="true"){
-window.location="login.html";
-}
-</script>
-
 <style>
+
 body{
 font-family:Arial;
-background:#f4f6f9;
+background:#f1f4f9;
 margin:0;
 }
 
@@ -24,18 +22,19 @@ margin:0;
 background:#2c7be5;
 color:white;
 padding:15px;
-font-size:22px;
+font-size:20px;
 }
 
 .menu{
-background:white;
-padding:10px;
 display:flex;
 gap:10px;
+padding:10px;
+flex-wrap:wrap;
+background:white;
 }
 
 button{
-padding:10px 20px;
+padding:10px 15px;
 border:none;
 background:#2c7be5;
 color:white;
@@ -50,8 +49,8 @@ padding:20px;
 .card{
 background:white;
 padding:20px;
-border-radius:10px;
 margin-bottom:20px;
+border-radius:10px;
 box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
@@ -61,16 +60,35 @@ border-collapse:collapse;
 }
 
 th,td{
-padding:10px;
+padding:8px;
 border-bottom:1px solid #ddd;
 text-align:center;
+}
+
+input{
+padding:8px;
+width:100%;
+margin-bottom:10px;
 }
 
 .total{
 font-size:20px;
 font-weight:bold;
-margin-bottom:15px;
+margin-bottom:10px;
 }
+
+@media(max-width:600px){
+
+table{
+font-size:12px;
+}
+
+.menu{
+flex-direction:column;
+}
+
+}
+
 </style>
 
 </head>
@@ -82,22 +100,31 @@ Dashboard Kas RT
 </div>
 
 <div class="menu">
+
 <button onclick="loadData('Kas_RT')">Kas RT</button>
 <button onclick="loadData('Kas_Agustusan')">Kas Agustusan</button>
-<button onclick="downloadPDF()">Download PDF</button>
+
+<button onclick="exportExcel()">Export Excel</button>
+<button onclick="downloadPDF()">Export PDF</button>
+
 </div>
 
 <div class="container">
 
 <div class="card">
+
 <div class="total">
-Total Saldo : Rp <span id="saldoTotal">0</span>
+Saldo Total : Rp <span id="saldoTotal">0</span>
 </div>
+
 <canvas id="chart"></canvas>
+
 </div>
 
 <div class="card">
+
 <table>
+
 <thead>
 <tr>
 <th>Tanggal</th>
@@ -107,18 +134,21 @@ Total Saldo : Rp <span id="saldoTotal">0</span>
 <th>Saldo</th>
 </tr>
 </thead>
+
 <tbody id="dataKas"></tbody>
+
 </table>
+
 </div>
 
-<div class="card">
+<div class="card" id="formInput">
 
 <h3>Input Transaksi</h3>
 
-<input type="date" id="tanggal"><br><br>
-<input type="text" id="ket" placeholder="Keterangan"><br><br>
-<input type="number" id="masuk" placeholder="Kas Masuk"><br><br>
-<input type="number" id="keluar" placeholder="Kas Keluar"><br><br>
+<input type="date" id="tanggal">
+<input type="text" id="ket" placeholder="Keterangan">
+<input type="number" id="masuk" placeholder="Kas Masuk">
+<input type="number" id="keluar" placeholder="Kas Keluar">
 
 <button onclick="kirim()">Simpan</button>
 
@@ -128,10 +158,10 @@ Total Saldo : Rp <span id="saldoTotal">0</span>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbxx40R6R21DG4vaPbjrlSP9sZyQfa_nE7LcUdNoPbeevXkhqGo2IuhrAXyePBDSsPM/exec";
+const API="https://docs.google.com/spreadsheets/d/1oqp9T1UOBDpaVWCXcbQ-Q8R2QXZta9FcSmApkgGa7jA/edit?usp=sharing";
 
-let chart;
 let sheetAktif="Kas_RT";
+let chart;
 
 function loadData(sheet){
 
@@ -147,34 +177,35 @@ let tbody=document.getElementById("dataKas");
 
 tbody.innerHTML="";
 
+let saldo=0;
 let masukTotal=0;
 let keluarTotal=0;
-let saldo=0;
 
 data.forEach(d=>{
 
-let masuk = Number(d.masuk || 0);
-let keluar = Number(d.keluar || 0);
+let masuk=Number(d.masuk || 0);
+let keluar=Number(d.keluar || 0);
 
-saldo = saldo + masuk - keluar;
+saldo+=masuk-keluar;
 
-masukTotal += masuk;
-keluarTotal += keluar;
+masukTotal+=masuk;
+keluarTotal+=keluar;
+
+let tgl=new Date(d.tanggal).toLocaleDateString("id-ID");
 
 tbody.innerHTML+=`
 <tr>
-<td>${d.tanggal}</td>
+<td>${tgl}</td>
 <td>${d.keterangan}</td>
-<td>${masuk}</td>
-<td>${keluar}</td>
-<td>${saldo}</td>
+<td>${masuk.toLocaleString()}</td>
+<td>${keluar.toLocaleString()}</td>
+<td>${saldo.toLocaleString()}</td>
 </tr>
 `;
 
 });
 
-document.getElementById("saldoTotal").innerText =
-saldo.toLocaleString();
+document.getElementById("saldoTotal").innerText=saldo.toLocaleString();
 
 buatChart(masukTotal,keluarTotal);
 
@@ -220,9 +251,22 @@ body:JSON.stringify(data)
 })
 
 .then(()=>{
-alert("Data tersimpan");
+
+alert("Data berhasil disimpan");
+
 loadData(sheetAktif);
+
 });
+
+}
+
+function exportExcel(){
+
+let table=document.querySelector("table");
+
+let wb=XLSX.utils.table_to_book(table,{sheet:"Kas RT"});
+
+XLSX.writeFile(wb,"laporan_kas_rt.xlsx");
 
 }
 
@@ -230,7 +274,7 @@ function downloadPDF(){
 
 const { jsPDF } = window.jspdf;
 
-let doc = new jsPDF();
+let doc=new jsPDF();
 
 doc.text("Laporan Kas RT",20,20);
 
@@ -239,13 +283,22 @@ let rows=document.querySelectorAll("#dataKas tr");
 let y=40;
 
 rows.forEach(r=>{
+
 doc.text(r.innerText,20,y);
+
 y+=10;
+
 });
 
-doc.save("laporan-kas.pdf");
+doc.save("laporan_kas.pdf");
 
 }
+
+setInterval(()=>{
+
+loadData(sheetAktif);
+
+},5000);
 
 loadData("Kas_RT");
 
