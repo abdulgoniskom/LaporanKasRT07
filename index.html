@@ -4,7 +4,7 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard Kas RT 07 Bumi Indah Citty</title>
+<title>Dashboard Kas RT</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -27,7 +27,7 @@ text-align:center;
 
 .container{
 padding:20px;
-max-width:1000px;
+max-width:1100px;
 margin:auto;
 }
 
@@ -36,45 +36,37 @@ background:white;
 padding:15px;
 border-radius:10px;
 margin-bottom:20px;
-box-shadow:0 4px 8px rgba(0,0,0,0.1);
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* SCROLL TABEL */
+
+.table-wrapper{
 overflow-x:auto;
 }
 
-button{
-background:#2f80ed;
-color:white;
-border:none;
-padding:8px 12px;
-border-radius:5px;
-cursor:pointer;
-}
-
-.logout{
-background:red;
-}
+/* TABEL TETAP UTUH */
 
 table{
+min-width:900px;
 width:100%;
 border-collapse:collapse;
-table-layout:fixed;
 }
 
-th,td{
-border-bottom:1px solid #ddd;
-padding:8px;
-text-align:center;
-font-size:13px;
-word-wrap:break-word;
-}
+/* HEADER */
 
 th{
 background:#2f80ed;
 color:white;
+padding:10px;
+position:sticky;
+top:0;
 }
 
-td:nth-child(2){
-max-width:220px;
-word-break:break-word;
+td{
+padding:8px;
+border-bottom:1px solid #ddd;
+white-space:nowrap;
 }
 
 .masuk{
@@ -87,13 +79,18 @@ color:red;
 font-weight:bold;
 }
 
+button{
+background:#2f80ed;
+color:white;
+border:none;
+padding:8px 12px;
+border-radius:5px;
+cursor:pointer;
+}
+
 input,select{
 padding:8px;
 margin:5px;
-}
-
-.formInput{
-display:none;
 }
 
 </style>
@@ -103,7 +100,7 @@ display:none;
 <body>
 
 <header>
-<h2>Laporan Kas RT 07 Bumi Indah Citty</h2>
+<h2>Dashboard Kas RT 07</h2>
 </header>
 
 <div class="container">
@@ -115,44 +112,9 @@ display:none;
 <option value="Kas_Agustusan">Kas Agustusan</option>
 </select>
 
-<select id="filterBulan" onchange="loadData()">
-<option value="">Semua Bulan</option>
-<option value="1">Januari</option>
-<option value="2">Februari</option>
-<option value="3">Maret</option>
-<option value="4">April</option>
-<option value="5">Mei</option>
-<option value="6">Juni</option>
-<option value="7">Juli</option>
-<option value="8">Agustus</option>
-<option value="9">September</option>
-<option value="10">Oktober</option>
-<option value="11">November</option>
-<option value="12">Desember</option>
-</select>
-
 <h3 id="saldo">Saldo : Rp 0</h3>
 
-<div style="text-align:right">
-
-<button id="loginBtn">Login Admin</button>
-<button id="logoutBtn" class="logout" style="display:none">Logout</button>
 <button onclick="cetakPDF()">Cetak PDF</button>
-
-</div>
-
-</div>
-
-<div class="card formInput" id="formInput">
-
-<h3>Input Transaksi</h3>
-
-<input type="date" id="tanggal">
-<input type="text" id="ket" placeholder="Keterangan">
-<input type="number" id="masuk" placeholder="Kas Masuk">
-<input type="number" id="keluar" placeholder="Kas Keluar">
-
-<button onclick="simpan()">Simpan</button>
 
 </div>
 
@@ -160,7 +122,11 @@ display:none;
 
 <input type="text" id="search" placeholder="Cari transaksi..." onkeyup="cariData()">
 
-<div style="overflow-x:auto">
+</div>
+
+<div class="card">
+
+<div class="table-wrapper">
 
 <table>
 
@@ -184,8 +150,7 @@ display:none;
 
 <div class="card">
 
-<h3>Grafik Pemasukan vs Pengeluaran</h3>
-
+<h3>Grafik Kas</h3>
 <canvas id="chartKas"></canvas>
 
 </div>
@@ -194,21 +159,25 @@ display:none;
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbwuzcUjVkeWKPVU2QQVNpJ9fLoNol_mVPOWEf0VbLUv-Gdf5R8h9IXCcaZ9RqvFyw/exec";
+const API="PASTE_URL_APPS_SCRIPT_DISINI";
 
 let chart;
 
+/* FORMAT RUPIAH */
+
 function rupiah(angka){
 
-angka = Number(angka);
+angka=Number(angka);
 
-if(!angka || angka === 0){
+if(!angka || angka===0){
 return "-";
 }
 
 return "Rp "+angka.toLocaleString("id-ID");
 
 }
+
+/* LOAD DATA */
 
 function loadData(){
 
@@ -256,13 +225,15 @@ grafik(totalMasuk,totalKeluar);
 
 }
 
+/* GRAFIK */
+
 function grafik(masuk,keluar){
 
 if(chart) chart.destroy();
 
 chart=new Chart(document.getElementById("chartKas"),{
 
-type:"doughnut",
+type:"pie",
 
 data:{
 labels:["Pemasukan","Pengeluaran"],
@@ -274,6 +245,8 @@ data:[masuk,keluar]
 })
 
 }
+
+/* SEARCH */
 
 function cariData(){
 
@@ -291,35 +264,8 @@ r.style.display=text.includes(input)?"":"none";
 
 }
 
-function simpan(){
-
-let sheet=document.getElementById("pilihKas").value;
-
-let data={
-
-action:"add",
-sheet:sheet,
-tanggal:document.getElementById("tanggal").value,
-keterangan:document.getElementById("ket").value,
-masuk:document.getElementById("masuk").value,
-keluar:document.getElementById("keluar").value
-
-}
-
-fetch(API,{
-method:"POST",
-body:JSON.stringify(data)
-})
-
-.then(res=>res.text())
-.then(()=>{
-alert("Data tersimpan");
-loadData();
-})
-
-}
-
-function cetakPDF(){
+/* CETAK PDF */
+  function cetakPDF(){
 
 const { jsPDF } = window.jspdf;
 let doc = new jsPDF();
@@ -387,3 +333,5 @@ setInterval(loadData,30000);
 </body>
 </html>
 ```
+
+
