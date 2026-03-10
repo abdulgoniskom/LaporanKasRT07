@@ -156,7 +156,7 @@ input,select{
 </div>
 
 <script>
-const API="https://script.google.com/macros/s/AKfycbziNeAFM3r_kmluJ4f0bIVy69niFGYedlbHwHNS5gT6Oi8ysHBAhswW_10flhV8hpI/exec";
+const API=https://script.google.com/macros/s/AKfycbxdEZJwArbDVx962FZsTK6ZeR7nZ-XyiTOl6qbTtvASnqoRQgTqvAPK58DofXxooJM/exec";
 let admin=false;
 let chart;
 
@@ -242,22 +242,38 @@ function cariData(){
 }
 
 function simpan(){
-  let sheet=document.getElementById("pilihKas").value;
-  let data={
-    sheet:sheet,
-    tanggal:document.getElementById("tanggal").value,
-    keterangan:document.getElementById("ket").value,
-    masuk:document.getElementById("masuk").value,
-    keluar:document.getElementById("keluar").value
-  }
 
-  fetch(API,{
-    method:"POST",
-    body:JSON.stringify(data)
-  }).then(res=>res.text())
-  .then(()=>{alert("Data tersimpan"); loadData();})
+let sheet = document.getElementById("pilihKas").value;
+
+let formData = new FormData();
+
+formData.append("action","add");
+formData.append("sheet",sheet);
+formData.append("tanggal",document.getElementById("tanggal").value);
+formData.append("keterangan",document.getElementById("ket").value);
+formData.append("masuk",document.getElementById("masuk").value || 0);
+formData.append("keluar",document.getElementById("keluar").value || 0);
+
+fetch(API,{
+method:"POST",
+body:formData
+})
+.then(res=>res.text())
+.then(res=>{
+alert("Data berhasil disimpan");
+loadData();
+
+document.getElementById("tanggal").value="";
+document.getElementById("ket").value="";
+document.getElementById("masuk").value="";
+document.getElementById("keluar").value="";
+})
+.catch(err=>{
+alert("Gagal menyimpan data");
+console.log(err);
+});
+
 }
-
 function cetakPDF(){
   const { jsPDF } = window.jspdf;
   let doc = new jsPDF();
