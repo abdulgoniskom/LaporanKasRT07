@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,9 +7,7 @@
 <title>Dashboard Kas RT 07 Bumi Indah Citty</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 <style>
@@ -38,6 +37,7 @@ padding:15px;
 border-radius:10px;
 margin-bottom:20px;
 box-shadow:0 4px 8px rgba(0,0,0,0.1);
+overflow-x:auto;
 }
 
 button{
@@ -56,6 +56,7 @@ background:red;
 table{
 width:100%;
 border-collapse:collapse;
+table-layout:fixed;
 }
 
 th,td{
@@ -63,11 +64,17 @@ border-bottom:1px solid #ddd;
 padding:8px;
 text-align:center;
 font-size:13px;
+word-wrap:break-word;
 }
 
 th{
 background:#2f80ed;
 color:white;
+}
+
+td:nth-child(2){
+max-width:220px;
+word-break:break-word;
 }
 
 .masuk{
@@ -87,6 +94,19 @@ margin:5px;
 
 .formInput{
 display:none;
+}
+
+@media(max-width:600px){
+
+th,td{
+font-size:11px;
+padding:6px;
+}
+
+h2{
+font-size:18px;
+}
+
 }
 
 </style>
@@ -124,12 +144,6 @@ display:none;
 <option value="12">Desember</option>
 </select>
 
-<select id="filterPeriode" onchange="loadData()">
-<option value="bulan">Per Bulan</option>
-<option value="3bulan">3 Bulan</option>
-<option value="tahun">1 Tahun</option>
-</select>
-
 <h3 id="saldo">Saldo : Rp 0</h3>
 
 <div style="text-align:right">
@@ -159,6 +173,8 @@ display:none;
 
 <input type="text" id="search" placeholder="Cari transaksi..." onkeyup="cariData()">
 
+<div style="overflow-x:auto">
+
 <table>
 
 <thead>
@@ -177,6 +193,8 @@ display:none;
 
 </div>
 
+</div>
+
 <div class="card">
 
 <h3>Grafik Pemasukan vs Pengeluaran</h3>
@@ -189,7 +207,7 @@ display:none;
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbw6F3TTzWFggrgZTGIrzCTjjUMW4kZdvZPyGp89aigYcob5Xuv6DUUXq8uwllB5PfA/exec";
+const API="https://script.google.com/macros/s/AKfycbwuzcUjVkeWKPVU2QQVNpJ9fLoNol_mVPOWEf0VbLUv-Gdf5R8h9IXCcaZ9RqvFyw/exec";
 
 let admin=false;
 let chart;
@@ -321,6 +339,7 @@ let sheet=document.getElementById("pilihKas").value;
 
 let data={
 
+action:"add",
 sheet:sheet,
 tanggal:document.getElementById("tanggal").value,
 keterangan:document.getElementById("ket").value,
@@ -345,7 +364,6 @@ loadData();
 function cetakPDF(){
 
 const { jsPDF } = window.jspdf;
-
 let doc = new jsPDF();
 
 let kas = document.getElementById("pilihKas").selectedOptions[0].text;
@@ -354,11 +372,12 @@ let bulan = document.getElementById("filterBulan").selectedOptions[0].text;
 let totalMasuk = 0;
 let totalKeluar = 0;
 
-doc.setFontSize(18);
-doc.text("LAPORAN KAS RT 07",105,20,{align:"center"});
-
-doc.setFontSize(11);
+doc.setFontSize(16);
+doc.text("LAPORAN KEUANGAN RT 07",105,20,{align:"center"});
+doc.setFontSize(12);
 doc.text("Perumahan Bumi Indah Citty",105,27,{align:"center"});
+
+doc.line(14,30,196,30);
 
 doc.text("Jenis Kas : "+kas,14,40);
 doc.text("Periode : "+bulan,14,46);
@@ -394,21 +413,15 @@ head:[["Tanggal","Keterangan","Masuk","Keluar","Saldo"]],
 
 body:rows,
 
+theme:"grid",
+
 styles:{fontSize:9},
 
-headStyles:{fillColor:[47,128,237]},
-
-columnStyles:{
-2:{halign:"right"},
-3:{halign:"right"},
-4:{halign:"right"}
-}
+headStyles:{fillColor:[47,128,237]}
 
 });
 
 let y = doc.lastAutoTable.finalY + 10;
-
-doc.setFontSize(11);
 
 doc.text("Total Pemasukan : Rp "+totalMasuk.toLocaleString("id-ID"),14,y);
 doc.text("Total Pengeluaran : Rp "+totalKeluar.toLocaleString("id-ID"),14,y+6);
@@ -421,8 +434,6 @@ let ttdY = y + 30;
 
 doc.text("Tangerang, "+new Date().toLocaleDateString("id-ID"),140,ttdY);
 
-doc.text("Mengetahui,",20,ttdY+10);
-
 doc.text("Ketua RT 07",20,ttdY+20);
 doc.text("(Muhammad Zainudin)",20,ttdY+40);
 
@@ -432,11 +443,13 @@ doc.text("(Abdul Goni)",140,ttdY+40);
 doc.save("Laporan_Kas_RT07.pdf");
 
 }
+
 loadData();
 
-setInterval(loadData,5000);
+setInterval(loadData,30000);
 
 </script>
 
 </body>
 </html>
+```
