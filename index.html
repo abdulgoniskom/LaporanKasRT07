@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard Kas RT 07 Bumi Indah Citty</title>
 
@@ -10,26 +9,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-
 body{
   font-family:Arial;
   margin:0;
   background:#eef2f7;
 }
-
 header{
   background:#2f80ed;
   color:white;
   padding:15px;
   text-align:center;
 }
-
 .container{
   padding:20px;
   max-width:1000px;
   margin:auto;
 }
-
 .card{
   background:white;
   padding:15px;
@@ -37,7 +32,6 @@ header{
   margin-bottom:20px;
   box-shadow:0 4px 8px rgba(0,0,0,0.1);
 }
-
 button{
   background:#2f80ed;
   color:white;
@@ -46,64 +40,46 @@ button{
   border-radius:5px;
   cursor:pointer;
 }
-
 .logout{
   background:red;
 }
-
-input,select{
-  padding:8px;
-  margin:5px;
-}
-
-.formInput{
-  display:none;
-}
-
-/* =======================
-   TABEL RESPONSIF
-======================= */
-.table-wrapper{
-  overflow-x:auto;
-  -webkit-overflow-scrolling: touch;
-}
-
 table{
   width:100%;
-  min-width:600px;
   border-collapse:collapse;
+  table-layout:fixed;
+  word-wrap:break-word;
 }
-
 th,td{
   border-bottom:1px solid #ddd;
   padding:8px;
   text-align:center;
   font-size:13px;
 }
-
 th{
   background:#2f80ed;
   color:white;
 }
-
 .masuk{
   color:green;
   font-weight:bold;
 }
-
 .keluar{
   color:red;
   font-weight:bold;
 }
-
+input,select{
+  padding:8px;
+  margin:5px;
+}
+.formInput{
+  display:none;
+}
 </style>
-
 </head>
-
 <body>
 
 <header>
-  <h2>Laporan Kas RT 07 Bumi Indah Citty</h2>
+<h2>Laporan Kas RT 07 Bumi Indah Citty</h2>
 </header>
 
 <div class="container">
@@ -148,19 +124,19 @@ th{
 </div>
 
 <div class="card formInput" id="formInput">
+
 <h3>Input Transaksi</h3>
 <input type="date" id="tanggal">
 <input type="text" id="ket" placeholder="Keterangan">
 <input type="number" id="masuk" placeholder="Kas Masuk">
 <input type="number" id="keluar" placeholder="Kas Keluar">
+
 <button onclick="simpan()">Simpan</button>
+
 </div>
 
 <div class="card">
 <input type="text" id="search" placeholder="Cari transaksi..." onkeyup="cariData()">
-
-<!-- WRAPPER TABEL RESPONSIF -->
-<div class="table-wrapper">
 <table>
 <thead>
 <tr>
@@ -173,8 +149,6 @@ th{
 </thead>
 <tbody id="tabelKas"></tbody>
 </table>
-</div>
-
 </div>
 
 <div class="card">
@@ -193,6 +167,7 @@ function rupiah(angka){
   return "Rp "+Number(angka).toLocaleString("id-ID");
 }
 
+// Login Admin
 document.getElementById("loginBtn").onclick=function(){
   let user=prompt("Username");
   let pass=prompt("Password");
@@ -201,9 +176,7 @@ document.getElementById("loginBtn").onclick=function(){
     document.getElementById("formInput").style.display="block";
     document.getElementById("loginBtn").style.display="none";
     document.getElementById("logoutBtn").style.display="inline";
-  }else{
-    alert("Login gagal");
-  }
+  } else { alert("Login gagal"); }
 }
 
 document.getElementById("logoutBtn").onclick=function(){
@@ -213,6 +186,7 @@ document.getElementById("logoutBtn").onclick=function(){
   document.getElementById("logoutBtn").style.display="none";
 }
 
+// Load Data
 function loadData(){
   let sheet=document.getElementById("pilihKas").value;
   let bulanFilter=document.getElementById("filterBulan").value;
@@ -229,50 +203,53 @@ function loadData(){
       let bulan=new Date(d.tanggal).getMonth()+1;
       if(bulanFilter && bulan!=bulanFilter) return;
 
-      saldo+=Number(d.masuk)-Number(d.keluar);
-      let tgl=new Date(d.tanggal).toLocaleDateString("id-ID");
+      saldo += Number(d.masuk)-Number(d.keluar);
+      let tgl = new Date(d.tanggal).toLocaleDateString("id-ID");
 
-      totalMasuk+=Number(d.masuk);
-      totalKeluar+=Number(d.keluar);
+      totalMasuk += Number(d.masuk);
+      totalKeluar += Number(d.keluar);
 
-      html+=`
-      <tr>
-      <td>${tgl}</td>
-      <td>${d.keterangan}</td>
-      <td class="masuk">${rupiah(d.masuk)}</td>
-      <td class="keluar">${rupiah(d.keluar)}</td>
-      <td>${rupiah(saldo)}</td>
-      </tr>
-      `;
+      // Masuk/Keluar rapi
+      let masukText = Number(d.masuk) > 0 ? rupiah(d.masuk) : "-";
+      let keluarText = Number(d.keluar) > 0 ? rupiah(d.keluar) : "-";
+
+      html += `<tr>
+        <td>${tgl}</td>
+        <td>${d.keterangan}</td>
+        <td class="masuk">${masukText}</td>
+        <td class="keluar">${keluarText}</td>
+        <td>${rupiah(saldo)}</td>
+      </tr>`;
     });
 
     document.getElementById("tabelKas").innerHTML=html;
     document.getElementById("saldo").innerHTML="Saldo : "+rupiah(saldo);
     grafik(totalMasuk,totalKeluar);
-  });
+  })
 }
 
+// Grafik
 function grafik(masuk,keluar){
   if(chart) chart.destroy();
   chart=new Chart(document.getElementById("chartKas"),{
     type:"doughnut",
-    data:{
-      labels:["Pemasukan","Pengeluaran"],
-      datasets:[{ data:[masuk,keluar] }]
-    }
+    data:{labels:["Pemasukan","Pengeluaran"],datasets:[{data:[masuk,keluar]}]}
   })
 }
 
+// Cari Data
 function cariData(){
   let input=document.getElementById("search").value.toLowerCase();
   let rows=document.querySelectorAll("#tabelKas tr");
   rows.forEach(r=>{
-    let text=r.innerText.toLowerCase();
-    r.style.display=text.includes(input)?"":"none";
+    r.style.display = r.innerText.toLowerCase().includes(input)?"":"none";
   })
 }
 
+// Simpan Data
 function simpan(){
+  if(!admin){ alert("Hanya admin yang bisa menambah data"); return; }
+
   let sheet=document.getElementById("pilihKas").value;
   let data={
     sheet:sheet,
@@ -281,18 +258,24 @@ function simpan(){
     masuk:document.getElementById("masuk").value,
     keluar:document.getElementById("keluar").value
   }
-  fetch(API,{ method:"POST", body:JSON.stringify(data) })
+
+  fetch(API,{
+    method:"POST",
+    body:JSON.stringify(data)
+  })
   .then(res=>res.text())
   .then(()=>{ alert("Data tersimpan"); loadData(); })
 }
 
+// Cetak PDF
 function cetakPDF(){
   const { jsPDF } = window.jspdf;
   let doc = new jsPDF();
   let kas = document.getElementById("pilihKas").selectedOptions[0].text;
   let bulan = document.getElementById("filterBulan").selectedOptions[0].text;
+  let totalMasuk = 0;
+  let totalKeluar = 0;
 
-  let totalMasuk=0, totalKeluar=0;
   doc.setFontSize(18);
   doc.text("LAPORAN KAS RT 07",105,20,{align:"center"});
   doc.setFontSize(11);
@@ -308,7 +291,7 @@ function cetakPDF(){
     let keluar = td[3].innerText.replace(/[^0-9]/g,"");
     totalMasuk += Number(masuk);
     totalKeluar += Number(keluar);
-    rows.push([ td[0].innerText, td[1].innerText, td[2].innerText, td[3].innerText, td[4].innerText ]);
+    rows.push([td[0].innerText,td[1].innerText,td[2].innerText,td[3].innerText,td[4].innerText]);
   });
 
   doc.autoTable({
@@ -340,7 +323,6 @@ function cetakPDF(){
 
 loadData();
 setInterval(loadData,5000);
-
 </script>
 
 </body>
