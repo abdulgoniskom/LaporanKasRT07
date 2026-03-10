@@ -46,8 +46,8 @@ button{
 table{
   width:100%;
   border-collapse:collapse;
-  table-layout:fixed;
-  word-wrap:break-word;
+  table-layout:auto;
+  min-width:600px;
 }
 th,td{
   border-bottom:1px solid #ddd;
@@ -85,70 +85,67 @@ input,select{
 <div class="container">
 
 <div class="card">
-
 <select id="pilihKas" onchange="loadData()">
-<option value="Kas_RT">Kas RT</option>
-<option value="Kas_Agustusan">Kas Agustusan</option>
+  <option value="Kas_RT">Kas RT</option>
+  <option value="Kas_Agustusan">Kas Agustusan</option>
 </select>
 
 <select id="filterBulan" onchange="loadData()">
-<option value="">Semua Bulan</option>
-<option value="1">Januari</option>
-<option value="2">Februari</option>
-<option value="3">Maret</option>
-<option value="4">April</option>
-<option value="5">Mei</option>
-<option value="6">Juni</option>
-<option value="7">Juli</option>
-<option value="8">Agustus</option>
-<option value="9">September</option>
-<option value="10">Oktober</option>
-<option value="11">November</option>
-<option value="12">Desember</option>
+  <option value="">Semua Bulan</option>
+  <option value="1">Januari</option>
+  <option value="2">Februari</option>
+  <option value="3">Maret</option>
+  <option value="4">April</option>
+  <option value="5">Mei</option>
+  <option value="6">Juni</option>
+  <option value="7">Juli</option>
+  <option value="8">Agustus</option>
+  <option value="9">September</option>
+  <option value="10">Oktober</option>
+  <option value="11">November</option>
+  <option value="12">Desember</option>
 </select>
 
 <select id="filterPeriode" onchange="loadData()">
-<option value="bulan">Per Bulan</option>
-<option value="3bulan">3 Bulan</option>
-<option value="tahun">1 Tahun</option>
+  <option value="bulan">Per Bulan</option>
+  <option value="3bulan">3 Bulan</option>
+  <option value="tahun">1 Tahun</option>
 </select>
 
 <h3 id="saldo">Saldo : Rp 0</h3>
 
 <div style="text-align:right">
-<button id="loginBtn">Login Admin</button>
-<button id="logoutBtn" class="logout" style="display:none">Logout</button>
-<button onclick="cetakPDF()">Cetak PDF</button>
+  <button id="loginBtn">Login Admin</button>
+  <button id="logoutBtn" class="logout" style="display:none">Logout</button>
+  <button onclick="cetakPDF()">Cetak PDF</button>
 </div>
-
 </div>
 
 <div class="card formInput" id="formInput">
-
 <h3>Input Transaksi</h3>
 <input type="date" id="tanggal">
 <input type="text" id="ket" placeholder="Keterangan">
 <input type="number" id="masuk" placeholder="Kas Masuk">
 <input type="number" id="keluar" placeholder="Kas Keluar">
-
 <button onclick="simpan()">Simpan</button>
-
 </div>
 
 <div class="card">
 <input type="text" id="search" placeholder="Cari transaksi..." onkeyup="cariData()">
+<div style="overflow-x:auto;">
 <table>
-<thead>
-<tr>
-<th>Tanggal</th>
-<th>Keterangan</th>
-<th>Masuk</th>
-<th>Keluar</th>
-<th>Saldo</th>
-</tr>
-</thead>
-<tbody id="tabelKas"></tbody>
+  <thead>
+    <tr>
+      <th>Tanggal</th>
+      <th>Keterangan</th>
+      <th>Masuk</th>
+      <th>Keluar</th>
+      <th>Saldo</th>
+    </tr>
+  </thead>
+  <tbody id="tabelKas"></tbody>
 </table>
+</div>
 </div>
 
 <div class="card">
@@ -164,10 +161,9 @@ let admin=false;
 let chart;
 
 function rupiah(angka){
-  return "Rp "+Number(angka).toLocaleString("id-ID");
+  return angka && angka != 0 ? "Rp "+Number(angka).toLocaleString("id-ID") : "-";
 }
 
-// Login Admin
 document.getElementById("loginBtn").onclick=function(){
   let user=prompt("Username");
   let pass=prompt("Password");
@@ -176,7 +172,9 @@ document.getElementById("loginBtn").onclick=function(){
     document.getElementById("formInput").style.display="block";
     document.getElementById("loginBtn").style.display="none";
     document.getElementById("logoutBtn").style.display="inline";
-  } else { alert("Login gagal"); }
+  }else{
+    alert("Login gagal");
+  }
 }
 
 document.getElementById("logoutBtn").onclick=function(){
@@ -186,7 +184,6 @@ document.getElementById("logoutBtn").onclick=function(){
   document.getElementById("logoutBtn").style.display="none";
 }
 
-// Load Data
 function loadData(){
   let sheet=document.getElementById("pilihKas").value;
   let bulanFilter=document.getElementById("filterBulan").value;
@@ -204,52 +201,47 @@ function loadData(){
       if(bulanFilter && bulan!=bulanFilter) return;
 
       saldo += Number(d.masuk)-Number(d.keluar);
-      let tgl = new Date(d.tanggal).toLocaleDateString("id-ID");
-
+      let tgl=new Date(d.tanggal).toLocaleDateString("id-ID");
       totalMasuk += Number(d.masuk);
       totalKeluar += Number(d.keluar);
 
-      // Masuk/Keluar rapi
-      let masukText = Number(d.masuk) > 0 ? rupiah(d.masuk) : "-";
-      let keluarText = Number(d.keluar) > 0 ? rupiah(d.keluar) : "-";
-
-      html += `<tr>
+      html+=`
+      <tr>
         <td>${tgl}</td>
         <td>${d.keterangan}</td>
-        <td class="masuk">${masukText}</td>
-        <td class="keluar">${keluarText}</td>
+        <td class="masuk">${rupiah(d.masuk)}</td>
+        <td class="keluar">${rupiah(d.keluar)}</td>
         <td>${rupiah(saldo)}</td>
       </tr>`;
     });
 
     document.getElementById("tabelKas").innerHTML=html;
-    document.getElementById("saldo").innerHTML="Saldo : "+rupiah(saldo);
+    document.getElementById("saldo").innerHTML="Saldo : "+rupiah(totalMasuk-totalKeluar);
     grafik(totalMasuk,totalKeluar);
-  })
+  });
 }
 
-// Grafik
 function grafik(masuk,keluar){
   if(chart) chart.destroy();
   chart=new Chart(document.getElementById("chartKas"),{
     type:"doughnut",
-    data:{labels:["Pemasukan","Pengeluaran"],datasets:[{data:[masuk,keluar]}]}
-  })
+    data:{
+      labels:["Pemasukan","Pengeluaran"],
+      datasets:[{data:[masuk,keluar]}]
+    }
+  });
 }
 
-// Cari Data
 function cariData(){
   let input=document.getElementById("search").value.toLowerCase();
   let rows=document.querySelectorAll("#tabelKas tr");
   rows.forEach(r=>{
-    r.style.display = r.innerText.toLowerCase().includes(input)?"":"none";
-  })
+    let text=r.innerText.toLowerCase();
+    r.style.display=text.includes(input)?"":"none";
+  });
 }
 
-// Simpan Data
 function simpan(){
-  if(!admin){ alert("Hanya admin yang bisa menambah data"); return; }
-
   let sheet=document.getElementById("pilihKas").value;
   let data={
     sheet:sheet,
@@ -262,19 +254,17 @@ function simpan(){
   fetch(API,{
     method:"POST",
     body:JSON.stringify(data)
-  })
-  .then(res=>res.text())
-  .then(()=>{ alert("Data tersimpan"); loadData(); })
+  }).then(res=>res.text())
+  .then(()=>{alert("Data tersimpan"); loadData();})
 }
 
-// Cetak PDF
 function cetakPDF(){
   const { jsPDF } = window.jspdf;
   let doc = new jsPDF();
   let kas = document.getElementById("pilihKas").selectedOptions[0].text;
   let bulan = document.getElementById("filterBulan").selectedOptions[0].text;
-  let totalMasuk = 0;
-  let totalKeluar = 0;
+
+  let totalMasuk=0, totalKeluar=0;
 
   doc.setFontSize(18);
   doc.text("LAPORAN KAS RT 07",105,20,{align:"center"});
@@ -310,13 +300,15 @@ function cetakPDF(){
   let saldo = totalMasuk-totalKeluar;
   doc.text("Saldo Akhir : Rp "+saldo.toLocaleString("id-ID"),14,y+12);
 
-  let ttdY = y + 30;
-  doc.text("Tangerang, "+new Date().toLocaleDateString("id-ID"),140,ttdY);
-  doc.text("Mengetahui,",20,ttdY+10);
-  doc.text("Ketua RT 07",20,ttdY+20);
-  doc.text("(Muhammad Zainudin)",20,ttdY+40);
-  doc.text("Bendahara RT 07",140,ttdY+20);
-  doc.text("(Abdul Goni)",140,ttdY+40);
+  // Bagian bawah rapi
+  let ttdY = y+30;
+  let pageWidth = doc.internal.pageSize.getWidth();
+  doc.text("Tangerang, "+new Date().toLocaleDateString("id-ID"),pageWidth-14,ttdY,{align:"right"});
+  doc.text("Mengetahui,",14,ttdY+10);
+  doc.text("Ketua RT 07",14,ttdY+20);
+  doc.text("(Muhammad Zainudin)",14,ttdY+40);
+  doc.text("Bendahara RT 07",pageWidth-14,ttdY+20,{align:"right"});
+  doc.text("(Abdul Goni)",pageWidth-14,ttdY+40,{align:"right"});
 
   doc.save("Laporan_Kas_RT07.pdf");
 }
