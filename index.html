@@ -245,14 +245,15 @@ let admin=false;
 
 let chart;
 
-function rupiah(angka){
-
+function formatKas(angka){
 angka = Number(angka || 0);
 
-return "Rp " + angka.toLocaleString("id-ID");
-
+if(angka === 0){
+return "-";
 }
 
+return rupiah(angka);
+}
 document.getElementById("loginBtn").onclick=function(){
 
 let user=prompt("Username");
@@ -339,16 +340,15 @@ html+=`
 
 <td>${d.keterangan}</td>
 
-<td class="masuk">${rupiah(masuk)}</td>
+<td class="masuk">${formatKas(masuk)}</td>
 
-<td class="keluar">${rupiah(keluar)}</td>
+<td class="keluar">${formatKas(keluar)}</td>
 
 <td>${rupiah(saldo)}</td>
 
 </tr>
 
 `;
-
 });
 
 document.getElementById("tabelKas").innerHTML=html;
