@@ -130,7 +130,7 @@ if(user==="admin" && pass==="12345"){
   document.getElementById("formInput").style.display="block";
   document.getElementById("loginBtn").style.display="none";
   document.getElementById("logoutBtn").style.display="inline";
-  loadData(); // reload tabel agar tombol Edit/Hapus muncul
+  loadData();
 }else{alert("Login gagal");}
 }
 document.getElementById("logoutBtn").onclick=function(){
@@ -167,7 +167,6 @@ document.getElementById("tabelKas").innerHTML=html;
 document.getElementById("saldo").innerHTML="Saldo : "+rupiah(saldo);
 grafik(totalMasuk,totalKeluar);
 });
-}
 
 // Grafik
 function grafik(masuk,keluar){
