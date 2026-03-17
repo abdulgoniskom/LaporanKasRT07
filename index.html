@@ -184,43 +184,63 @@ document.getElementById("logoutBtn").onclick=function(){
   document.getElementById("logoutBtn").style.display="none";
 }
 
-function loadData(){
-  let sheet=document.getElementById("pilihKas").value;
-  let bulanFilter=document.getElementById("filterBulan").value;
+let dataMentah = []; // Variabel global untuk menampung semua data dari server
 
-  fetch(API+"?sheet="+sheet)
-  .then(res=>res.json())
-  .then(data=>{
-    let html="";
-    let saldo=0;
-    let totalMasuk=0;
-    let totalKeluar=0;
-
-    data.forEach(d=>{
-      let bulan=new Date(d.tanggal).getMonth()+1;
-      if(bulanFilter && bulan!=bulanFilter) return;
-
-      saldo += Number(d.masuk)-Number(d.keluar);
-      let tgl=new Date(d.tanggal).toLocaleDateString("id-ID");
-      totalMasuk += Number(d.masuk);
-      totalKeluar += Number(d.keluar);
-
-      html+=`
-      <tr>
-        <td>${tgl}</td>
-        <td>${d.keterangan}</td>
-        <td class="masuk">${rupiah(d.masuk)}</td>
-        <td class="keluar">${rupiah(d.keluar)}</td>
-        <td>${rupiah(saldo)}</td>
-      </tr>`;
+function loadData() {
+  let sheet = document.getElementById("pilihKas").value;
+  
+  fetch(API + "?sheet=" + sheet)
+    .then(res => res.json())
+    .then(data => {
+      dataMentah = data; // Simpan data asli
+      renderTabel(); // Panggil fungsi untuk menampilkan ke layar
     });
-
-    document.getElementById("tabelKas").innerHTML=html;
-    document.getElementById("saldo").innerHTML="Saldo : "+rupiah(totalMasuk-totalKeluar);
-    grafik(totalMasuk,totalKeluar);
-  });
 }
 
+function renderTabel() {
+  let bulanFilter = document.getElementById("filterBulan").value;
+  let periodeFilter = document.getElementById("filterPeriode").value;
+  let html = "";
+  let runningSaldo = 0;
+  let totalMasuk = 0;
+  let totalKeluar = 0;
+
+  // Tentukan rentang bulan berdasarkan filterPeriode
+  let bulanAkhir = parseInt(bulanFilter);
+  let bulanAwal = bulanAkhir;
+
+  if (periodeFilter === "3bulan") bulanAwal = Math.max(1, bulanAkhir - 2);
+  if (periodeFilter === "tahun") { bulanAwal = 1; bulanAkhir = 12; }
+  if (bulanFilter === "") { bulanAwal = 1; bulanAkhir = 12; }
+
+  dataMentah.forEach(d => {
+    let tglObj = new Date(d.tanggal);
+    let bln = tglObj.getMonth() + 1;
+    let m = Number(d.masuk) || 0;
+    let k = Number(d.keluar) || 0;
+
+    // Hitung saldo berjalan untuk semua data (agar saldo akhir akurat)
+    runningSaldo += (m - k);
+
+    // Filter tampilan berdasarkan periode
+    if (bln >= bulanAwal && bln <= bulanAkhir) {
+      totalMasuk += m;
+      totalKeluar += k;
+      html += `
+      <tr>
+        <td>${tglObj.toLocaleDateString("id-ID")}</td>
+        <td style="text-align:left">${d.keterangan}</td>
+        <td class="masuk">${rupiah(m)}</td>
+        <td class="keluar">${rupiah(k)}</td>
+        <td style="font-weight:bold">${rupiah(runningSaldo)}</td>
+      </tr>`;
+    }
+  });
+
+  document.getElementById("tabelKas").innerHTML = html;
+  document.getElementById("saldo").innerHTML = "Saldo Akhir Periode: " + rupiah(totalMasuk - totalKeluar);
+  grafik(totalMasuk, totalKeluar);
+}
 function grafik(masuk,keluar){
   if(chart) chart.destroy();
   chart=new Chart(document.getElementById("chartKas"),{
@@ -274,61 +294,95 @@ console.log(err);
 });
 
 }
-function cetakPDF(){
+function cetakPDF() {
   const { jsPDF } = window.jspdf;
   let doc = new jsPDF();
-  let kas = document.getElementById("pilihKas").selectedOptions[0].text;
-  let bulan = document.getElementById("filterBulan").selectedOptions[0].text;
+  
+  let kasName = document.getElementById("pilihKas").selectedOptions[0].text;
+  let bulanFilter = document.getElementById("filterBulan").value;
+  let periodeFilter = document.getElementById("filterPeriode").value;
+  let blnText = document.getElementById("filterBulan").selectedOptions[0].text;
 
-  let totalMasuk=0, totalKeluar=0;
+  // Logika Rentang Periode
+  let bulanAkhir = bulanFilter === "" ? 12 : parseInt(bulanFilter);
+  let bulanAwal = bulanAkhir;
+  if (periodeFilter === "3bulan") bulanAwal = Math.max(1, bulanAkhir - 2);
+  if (periodeFilter === "tahun" || bulanFilter === "") { bulanAwal = 1; bulanAkhir = 12; }
 
-  doc.setFontSize(18);
-  doc.text("LAPORAN KAS RT 07",105,20,{align:"center"});
-  doc.setFontSize(11);
-  doc.text("Perumahan Bumi Indah Citty",105,27,{align:"center"});
-  doc.text("Jenis Kas : "+kas,14,40);
-  doc.text("Periode : "+bulan,14,46);
-  doc.text("Tanggal Cetak : "+new Date().toLocaleDateString("id-ID"),14,52);
+  let rows = [];
+  let saldoAwal = 0;
+  let runningSaldo = 0;
+  let totalM = 0;
+  let totalK = 0;
 
-  let rows=[];
-  document.querySelectorAll("#tabelKas tr").forEach(tr=>{
-    let td=tr.querySelectorAll("td");
-    let masuk = td[2].innerText.replace(/[^0-9]/g,"");
-    let keluar = td[3].innerText.replace(/[^0-9]/g,"");
-    totalMasuk += Number(masuk);
-    totalKeluar += Number(keluar);
-    rows.push([td[0].innerText,td[1].innerText,td[2].innerText,td[3].innerText,td[4].innerText]);
+  dataMentah.forEach(d => {
+    let bln = new Date(d.tanggal).getMonth() + 1;
+    let m = Number(d.masuk) || 0;
+    let k = Number(d.keluar) || 0;
+
+    if (bln < bulanAwal) {
+      // Masuk ke Saldo Awal (sebelum periode mulai)
+      saldoAwal += (m - k);
+    } else if (bln >= bulanAwal && bln <= bulanAkhir) {
+      // Masuk ke Tabel PDF
+      if (rows.length === 0) runningSaldo = saldoAwal + (m - k);
+      else runningSaldo += (m - k);
+
+      totalM += m;
+      totalK += k;
+
+      rows.push([
+        new Date(d.tanggal).toLocaleDateString("id-ID"),
+        d.keterangan,
+        rupiah(m),
+        rupiah(k),
+        rupiah(runningSaldo)
+      ]);
+    }
   });
+
+  // Tambahkan baris Saldo Awal di PDF
+  rows.unshift(["-", "SALDO PINDAHAN (Saldo Awal)", "-", "-", rupiah(saldoAwal)]);
+
+  // Judul & Header
+  doc.setFontSize(14);
+  doc.text("LAPORAN KAS RT 07 BUMI INDAH CITTY", 105, 15, { align: "center" });
+  doc.setFontSize(10);
+  let infoPeriode = (bulanFilter === "") ? "Semua Periode" : `Periode: ${bulanAwal} s/d ${bulanAkhir}`;
+  doc.text(`Jenis Kas: ${kasName} | ${infoPeriode}`, 105, 22, { align: "center" });
 
   doc.autoTable({
-    startY:60,
-    head:[["Tanggal","Keterangan","Masuk","Keluar","Saldo"]],
-    body:rows,
-    styles:{fontSize:9},
-    headStyles:{fillColor:[47,128,237]},
-    columnStyles:{2:{halign:"right"},3:{halign:"right"},4:{halign:"right"}}
+    startY: 30,
+    head: [["Tanggal", "Keterangan", "Masuk", "Keluar", "Saldo"]],
+    body: rows,
+    theme: 'grid',
+    headStyles: { fillColor: [47, 128, 237] },
+    columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } }
   });
 
-  let y = doc.lastAutoTable.finalY + 10;
-  doc.setFontSize(11);
-  doc.text("Total Pemasukan : Rp "+totalMasuk.toLocaleString("id-ID"),14,y);
-  doc.text("Total Pengeluaran : Rp "+totalKeluar.toLocaleString("id-ID"),14,y+6);
-  let saldo = totalMasuk-totalKeluar;
-  doc.text("Saldo Akhir : Rp "+saldo.toLocaleString("id-ID"),14,y+12);
+  // Ringkasan Bawah
+  let finalY = doc.lastAutoTable.finalY + 10;
+  doc.setFont(undefined, 'bold');
+  doc.text(`RINGKASAN:`, 14, finalY);
+  doc.setFont(undefined, 'normal');
+  doc.text(`Saldo Awal Periode: ${rupiah(saldoAwal)}`, 14, finalY + 7);
+  doc.text(`Total Pemasukan   : ${rupiah(totalM)}`, 14, finalY + 14);
+  doc.text(`Total Pengeluaran : ${rupiah(totalK)}`, 14, finalY + 21);
+  doc.setFont(undefined, 'bold');
+  doc.text(`SALDO AKHIR      : ${rupiah(saldoAwal + totalM - totalK)}`, 14, finalY + 30);
 
-  // Bagian bawah rapi
-  let ttdY = y+30;
-  let pageWidth = doc.internal.pageSize.getWidth();
-  doc.text("Tangerang, "+new Date().toLocaleDateString("id-ID"),pageWidth-14,ttdY,{align:"right"});
-  doc.text("Mengetahui,",14,ttdY+10);
-  doc.text("Ketua RT 07",14,ttdY+20);
-  doc.text("(Muhammad Zainudin)",14,ttdY+40);
-  doc.text("Bendahara RT 07",pageWidth-14,ttdY+20,{align:"right"});
-  doc.text("(Abdul Goni)",pageWidth-14,ttdY+40,{align:"right"});
+  // Tanda Tangan
+  let w = doc.internal.pageSize.getWidth();
+  let signY = finalY + 50;
+  doc.setFont(undefined, 'normal');
+  doc.text("Tangerang, " + new Date().toLocaleDateString("id-ID"), w - 20, signY, { align: "right" });
+  doc.text("Ketua RT 07", 30, signY + 10);
+  doc.text("Muhammad Zainudin", 30, signY + 35);
+  doc.text("Bendahara RT 07", w - 30, signY + 10, { align: "right" });
+  doc.text("Abdul Goni", w - 30, signY + 35, { align: "right" });
 
-  doc.save("Laporan_Kas_RT07.pdf");
+  window.open(doc.output('bloburl'), '_blank');
 }
-
 loadData();
 setInterval(loadData,5000);
 </script>
