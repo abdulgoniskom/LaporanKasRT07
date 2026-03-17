@@ -99,29 +99,48 @@
     }
 
     function renderTabel() {
-        let fB = document.getElementById("filterBulan").value;
-        let fT = document.getElementById("filterTahun").value;
-        let html = ""; let running = 0;
+  // Ambil pilihan dari dropdown filter
+  let fB = String(document.getElementById("filterBulan").value).trim();
+  let fT = String(document.getElementById("filterTahun").value).trim();
+  
+  let html = ""; 
+  let runningSaldo = 0; 
 
-        document.getElementById("tableHead").innerHTML = `<th>Tanggal</th><th>Keterangan</th><th>Masuk</th><th>Keluar</th><th>Saldo</th>${adminMode ? '<th>Aksi</th>' : ''}`;
+  // Reset Header Tabel
+  document.getElementById("tableHead").innerHTML = `
+    <th>Tanggal</th><th>Keterangan</th><th>Masuk</th><th>Keluar</th><th>Saldo</th>
+    ${adminMode ? '<th>Aksi</th>' : ''}`;
 
-        dataMentah.forEach((d, i) => {
-            let m = Number(d.masuk) || 0; let k = Number(d.keluar) || 0;
-            running += (m - k);
+  dataMentah.forEach((d, index) => {
+    let m = Number(d.masuk) || 0;
+    let k = Number(d.keluar) || 0;
+    
+    // Saldo kumulatif dihitung untuk SEMUA data (Saldo berjalan)
+    runningSaldo += (m - k);
 
-            if (String(d.bulan_laporan) === String(fB) && String(d.tahun_laporan) === String(fT)) {
-                html += `<tr>
-                    <td>${new Date(d.tanggal).toLocaleDateString("id-ID")}</td>
-                    <td style="text-align:left">${d.keterangan}</td>
-                    <td class="masuk">${rupiah(m)}</td><td class="keluar">${rupiah(k)}</td>
-                    <td style="font-weight:bold">${rupiah(running)}</td>
-                    ${adminMode ? `<td><button onclick="editData(${i})" style="background:orange">Edit</button> <button onclick="hapusData(${i})" style="background:red">Del</button></td>` : ""}
-                </tr>`;
-            }
-        });
-        document.getElementById("tabelKas").innerHTML = html || '<tr><td colspan="6">Tidak ada data.</td></tr>';
-        document.getElementById("saldoDisplay").innerText = "Saldo Kas: " + rupiah(running);
+    // LOGIKA FILTER KETAT:
+    // Hanya tampilkan jika kolom 'bulan_laporan' di Sheets SAMA DENGAN dropdown filter
+    let blnData = String(d.bulan_laporan).trim();
+    let thnData = String(d.tahun_laporan).trim();
+
+    if (blnData === fB && thnData === fT) {
+      html += `<tr>
+        <td>${new Date(d.tanggal).toLocaleDateString("id-ID")}</td>
+        <td style="text-align:left">${d.keterangan}</td>
+        <td class="masuk">${rupiah(m)}</td>
+        <td class="keluar">${rupiah(k)}</td>
+        <td style="font-weight:bold">${rupiah(runningSaldo)}</td>
+        ${adminMode ? `<td>
+            <button onclick="editData(${index})" style="background:orange">Edit</button>
+            <button onclick="hapusData(${index})" style="background:red">Del</button>
+        </td>` : ""}
+      </tr>`;
     }
+  });
+
+  document.getElementById("tabelKas").innerHTML = html || '<tr><td colspan="6">Tidak ada transaksi untuk laporan bulan ini.</td></tr>';
+  document.getElementById("saldoDisplay").innerText = "Saldo Kas: " + rupiah(runningSaldo);
+}
 
     function simpanData() {
         let fd = new FormData();
@@ -158,24 +177,91 @@
     document.getElementById("logoutBtn").onclick = () => location.reload();
 
     function cetakPDF() {
-        const { jsPDF } = window.jspdf; let doc = new jsPDF();
-        let fB = parseInt(document.getElementById("filterBulan").value);
-        let fT = parseInt(document.getElementById("filterTahun").value);
-        let rows = []; let sPindah = 0; let run = 0;
-        dataMentah.forEach(d => {
-            let m = Number(d.masuk) || 0; let k = Number(d.keluar) || 0;
-            let b = parseInt(d.bulan_laporan); let t = parseInt(d.tahun_laporan);
-            if (t < fT || (t === fT && b < fB)) sPindah += (m - k);
-            else if (t === fT && b === fB) { if (rows.length === 0) run = sPindah + (m - k); else run += (m - k);
-                rows.push([new Date(d.tanggal).toLocaleDateString("id-ID"), d.keterangan, rupiah(m), rupiah(k), rupiah(run)]);
-            }
-        });
-        rows.unshift(["-", "SALDO PINDAHAN", "-", "-", rupiah(sPindah)]);
-        doc.text("LAPORAN KAS RT 07", 105, 15, {align:"center"});
-        doc.autoTable({ startY: 25, head: [["Tgl", "Ket", "M", "K", "S"]], body: rows });
-        window.open(doc.output('bloburl'), '_blank');
-    }
+  const { jsPDF } = window.jspdf;
+  let doc = new jsPDF();
+  
+  // Ambil nilai filter dari dropdown (Pastikan string agar aman)
+  let filterBln = String(document.getElementById("filterBulan").value).trim();
+  let filterThn = String(document.getElementById("filterTahun").value).trim();
+  
+  let rows = []; 
+  let saldoPindahan = 0; 
+  let runningBulanIni = 0;
 
+  // Konversi filter ke angka untuk perbandingan Saldo Pindahan
+  let fB = parseInt(filterBln);
+  let fT = parseInt(filterThn);
+
+  dataMentah.forEach(d => {
+    let m = Number(d.masuk) || 0;
+    let k = Number(d.keluar) || 0;
+    
+    // Data dari Sheets (Pastikan string & angka sinkron)
+    let bDataStr = String(d.bulan_laporan).trim();
+    let tDataStr = String(d.tahun_laporan).trim();
+    let bDataNum = parseInt(bDataStr);
+    let tDataNum = parseInt(tDataStr);
+
+    // 1. LOGIKA SALDO PINDAHAN (Semua transaksi SEBELUM periode filter)
+    if (tDataNum < fT || (tDataNum === fT && bDataNum < fB)) {
+      saldoPindahan += (m - k);
+    } 
+    
+    // 2. LOGIKA DATA BULAN INI (Hanya yang BULAN & TAHUN LAPORAN-nya SAMA)
+    else if (bDataStr === filterBln && tDataStr === filterThn) {
+      // Jika ini baris pertama bulan ini, running saldo mulai dari saldo pindahan + transaksi pertama
+      if (rows.length === 0) {
+        runningBulanIni = saldoPindahan + (m - k);
+      } else {
+        runningBulanIni += (m - k);
+      }
+      
+      rows.push([
+        new Date(d.tanggal).toLocaleDateString("id-ID"),
+        d.keterangan,
+        rupiah(m),
+        rupiah(k),
+        rupiah(runningBulanIni)
+      ]);
+    }
+  });
+
+  // Tambahkan Baris Saldo Pindahan di urutan paling atas tabel PDF
+  rows.unshift([
+    "-", 
+    "SALDO PINDAHAN DARI PERIODE SEBELUMNYA", 
+    "-", 
+    "-", 
+    rupiah(saldoPindahan)
+  ]);
+
+  // Desain PDF
+  doc.setFontSize(16);
+  doc.text("LAPORAN KAS RT 07", 105, 15, { align: "center" });
+  doc.setFontSize(10);
+  doc.text(`Periode: ${document.getElementById("filterBulan").options[document.getElementById("filterBulan").selectedIndex].text} ${filterThn}`, 105, 22, { align: "center" });
+
+  doc.autoTable({
+    startY: 28,
+    head: [["Tanggal", "Keterangan", "Masuk", "Keluar", "Saldo"]],
+    body: rows,
+    theme: 'grid',
+    headStyles: { fillColor: [47, 128, 237], halign: 'center' }, // Warna biru dashboard
+    columnStyles: {
+      0: { halign: 'center' },
+      2: { halign: 'right' },
+      3: { halign: 'right' },
+      4: { halign: 'right', fontStyle: 'bold' }
+    }
+  });
+
+  // Tambahkan Info Saldo Akhir di bawah tabel
+  let finalY = doc.lastAutoTable.finalY + 10;
+  doc.setFontSize(12);
+  doc.text(`Total Saldo Akhir: ${rupiah(saldoPindahan + (rows.slice(1).reduce((a, b) => a + (parseInt(b[2].replace(/[^0-9-]/g, '')) || 0) - (parseInt(b[3].replace(/[^0-9-]/g, '')) || 0), 0)))}`, 14, finalY);
+
+  window.open(doc.output('bloburl'), '_blank');
+}
     loadData();
 </script>
 </body>
