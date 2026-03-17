@@ -2,346 +2,260 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard Kas RT 07 Bumi Indah Citty</title>
+<title>Kas RT 07 - Patokan Bulan Laporan</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-body{ font-family: 'Segoe UI', Arial, sans-serif; margin:0; background:#f4f7f9; color: #333; }
-header{ background: linear-gradient(135deg, #2f80ed, #56ccf2); color:white; padding:20px; text-align:center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-.container{ padding:20px; max-width:1100px; margin:auto; }
-.card{ background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 4px 15px rgba(0,0,0,0.05); }
+  body{ font-family: 'Segoe UI', Arial, sans-serif; margin:0; background:#f0f2f5; color: #333; }
+  header{ background: #2f80ed; color:white; padding:15px; text-align:center; }
+  .container{ padding:15px; max-width:1000px; margin:auto; }
+  .card{ background:white; padding:15px; border-radius:10px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+  
+  .flex-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .admin-header { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+  
+  button{ border:none; padding:10px 15px; border-radius:5px; cursor:pointer; font-weight:bold; color:white; }
+  .btn-pdf { background: #8e44ad; }
+  .btn-login { background: #27ae60; }
+  .btn-logout { background: #e74c3c; }
+  .btn-save { background: #2f80ed; width: 100%; margin-top: 10px; }
 
-.admin-header { display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px; }
-#loginBtn { background: #27ae60; font-weight: bold; padding: 10px 20px; border: none; border-radius: 8px; color: white; cursor: pointer; }
-#logoutBtn { background: #e74c3c; padding: 10px 20px; border: none; border-radius: 8px; color: white; cursor: pointer; }
-
-button{ color:white; border:none; padding:10px 15px; border-radius:6px; cursor:pointer; font-weight: 500; transition: 0.2s; }
-button:hover { opacity: 0.8; }
-.btn-primary { background:#2f80ed; }
-.btn-pdf { background: #8e44ad; }
-.btn-tutup { background: #f39c12; margin-top: 10px; width: 100%; font-weight: bold; }
-
-table{ width:100%; border-collapse:collapse; margin-top: 10px; min-width: 700px; }
-th,td{ border-bottom:1px solid #eee; padding:12px 8px; text-align:center; font-size:13px; }
-th{ background:#2f80ed; color:white; text-transform: uppercase; font-size: 11px; }
-.masuk{ color:#27ae60; font-weight:bold; }
-.keluar{ color:#e74c3c; font-weight:bold; }
-
-input,select{ padding:10px; margin:5px; border: 1px solid #ddd; border-radius: 6px; }
-.formInput{ display:none; border-left: 5px solid #27ae60; }
-.saldo-box { color: #2c3e50; margin: 10px 0; padding: 10px; background: #e8f4fd; border-radius: 8px; display: inline-block; }
-
-.btn-edit { background: #f39c12; padding: 5px 8px; font-size: 11px; margin-right: 2px; }
-.btn-hapus { background: #e74c3c; padding: 5px 8px; font-size: 11px; }
-
-@media (max-width: 600px) { input, select, button { width: 100%; margin: 5px 0; } }
+  table{ width:100%; border-collapse:collapse; margin-top: 10px; font-size: 13px; }
+  th,td{ border-bottom:1px solid #ddd; padding:10px 5px; text-align:center; }
+  th{ background:#f8f9fa; color:#555; }
+  .masuk{ color:#27ae60; } .keluar{ color:#e74c3c; }
+  
+  input, select { padding:10px; border:1px solid #ccc; border-radius:5px; width: 100%; box-sizing: border-box; }
+  .formInput { display:none; border-top: 4px solid #27ae60; }
+  .label-group { font-size: 12px; font-weight: bold; margin-top: 8px; display: block; }
 </style>
 </head>
 <body>
 
 <header>
-  <h2>Laporan Kas RT 07 Bumi Indah Citty</h2>
+  <h3>SISTEM KAS RT 07 BUMI INDAH CITTY</h3>
 </header>
 
 <div class="container">
   
   <div class="admin-header">
-    <button id="loginBtn">🔑 LOGIN ADMIN</button>
-    <button id="logoutBtn" style="display:none">Logout</button>
+    <button id="loginBtn" class="btn-login">LOGIN ADMIN</button>
+    <button id="logoutBtn" class="btn-logout" style="display:none">LOGOUT</button>
   </div>
 
   <div class="card">
-    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
-      <select id="pilihKas" onchange="loadData()">
-        <option value="Kas_RT">Kas RT</option>
-        <option value="Kas_Agustusan">Kas Agustusan</option>
-      </select>
-
-      <select id="filterBulan" onchange="renderTabel()">
-        <option value="">Semua Bulan</option>
-        <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
-        <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
-        <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
-        <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
-      </select>
-
-      <select id="filterPeriode" onchange="renderTabel()">
-        <option value="bulan">Per Bulan</option>
-        <option value="3bulan">Per 3 Bulan</option>
-        <option value="tahun">Per Tahun</option>
-      </select>
-      
-      <button class="btn-pdf" onclick="cetakPDF()">📄 Cetak PDF</button>
+    <div class="flex-group">
+      <div style="flex:1">
+        <label class="label-group">PILIH KAS:</label>
+        <select id="pilihKas" onchange="loadData()">
+          <option value="Kas_RT">Kas Umum RT</option>
+          <option value="Kas_Agustusan">Kas Agustusan</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <label class="label-group">LIHAT LAPORAN BULAN:</label>
+        <select id="filterBulan" onchange="renderTabel()">
+          <option value="">Semua Data</option>
+          <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+          <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+          <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+          <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+        </select>
+      </div>
+      <button class="btn-pdf" onclick="cetakPDF()" style="align-self: flex-end;">📄 PDF</button>
     </div>
-
-    <div class="saldo-box">
-      <h2 id="saldo" style="margin:0">Saldo : Rp 0</h2>
-    </div>
+    <h2 id="saldoDisplay" style="color:#2f80ed; margin-top:15px;">Saldo Akhir: Rp 0</h2>
   </div>
 
   <div class="card formInput" id="formInput">
-    <h3 id="formTitle">Tambah Transaksi Baru</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
-      <input type="date" id="tanggal">
-      <input type="text" id="ket" placeholder="Keterangan">
-      <input type="number" id="masuk" placeholder="Masuk (Rp)">
-      <input type="number" id="keluar" placeholder="Keluar (Rp)">
+    <h4 id="formTitle">INPUT DATA BARU</h4>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div>
+        <label class="label-group">Tanggal Transaksi:</label>
+        <input type="date" id="tanggal">
+      </div>
+      <div>
+        <label class="label-group">Masuk Ke Laporan Bulan:</label>
+        <select id="bulanLaporan">
+          <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+          <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+          <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+          <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+        </select>
+      </div>
     </div>
-    <button class="btn-primary" id="btnSimpan" onclick="simpan()" style="margin-top:15px; width: 100%; background: #27ae60;">Simpan Transaksi</button>
-    <button class="btn-tutup" onclick="tutupBuku()">🔒 Tutup Buku (Pindahkan Saldo)</button>
+    <label class="label-group">Keterangan:</label>
+    <input type="text" id="ket" placeholder="Contoh: Iuran Kas Warga Januari">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top:10px;">
+      <input type="number" id="masuk" placeholder="Uang Masuk (Rp)">
+      <input type="number" id="keluar" placeholder="Uang Keluar (Rp)">
+    </div>
+    <button id="btnSimpan" class="btn-save" onclick="simpan()">SIMPAN KE GOOGLE SHEETS</button>
   </div>
 
-  <div class="card">
-    <input type="text" id="search" placeholder="Cari keterangan atau tanggal..." onkeyup="cariData()" style="width: 97%; margin-bottom:15px;">
-    <div style="overflow-x:auto;">
-      <table>
-        <thead>
-          <tr id="tableHead">
-            <th>Tanggal</th>
-            <th>Keterangan</th>
-            <th>Masuk</th>
-            <th>Keluar</th>
-            <th>Saldo</th>
-          </tr>
-        </thead>
-        <tbody id="tabelKas"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>Statistik Kas</h3>
-    <div style="max-width: 300px; margin: auto;">
-      <canvas id="chartKas"></canvas>
-    </div>
+  <div class="card" style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr id="tableHead">
+          <th>Tgl Input</th>
+          <th>Keterangan</th>
+          <th>Masuk</th>
+          <th>Keluar</th>
+          <th>Saldo</th>
+        </tr>
+      </thead>
+      <tbody id="tabelKas"></tbody>
+    </table>
   </div>
 
 </div>
 
 <script>
-// GANTI URL INI DENGAN URL DEPLOY ANDA
-const API="https://script.google.com/macros/s/AKfycbzpX94nRCRZA11BSFZSrDcDdA7DBaa3akN1svHFBLjSEe-A0gzVhwAF8eATDDBQiw/exec";
-let chart;
+const API = "https://script.google.com/macros/s/AKfycbxJWvljxTCyb66GXXylVqjsTMwfAobB7NFohZBTuMCloxlD-sWIdglCHTByaMQdZbo/exec"; // GANTI DENGAN URL DEPLOY ANDA
 let dataMentah = [];
-let admin = false;
+let adminMode = false;
 
-function rupiah(angka){
-  return angka && angka != 0 ? "Rp "+Number(angka).toLocaleString("id-ID") : "-";
+function rupiah(n) { 
+  return n && n != 0 ? "Rp " + Number(n).toLocaleString("id-ID") : "-"; 
 }
 
-// LOGIN SYSTEM
-document.getElementById("loginBtn").onclick=function(){
-  let user=prompt("Username:");
-  let pass=prompt("Password:");
-  if(user==="admin" && pass==="12345"){
-    admin = true;
-    document.getElementById("formInput").style.display="block";
-    document.getElementById("loginBtn").style.display="none";
-    document.getElementById("logoutBtn").style.display="inline";
+// 1. LOGIN
+document.getElementById("loginBtn").onclick = () => {
+  let p = prompt("Masukkan Password Admin:");
+  if(p === "12345") {
+    adminMode = true;
+    document.getElementById("formInput").style.display = "block";
+    document.getElementById("loginBtn").style.display = "none";
+    document.getElementById("logoutBtn").style.display = "inline";
     renderTabel();
-  } else { alert("Login Gagal!"); }
+  }
+};
+
+document.getElementById("logoutBtn").onclick = () => location.reload();
+
+// 2. LOAD DATA
+function loadData() {
+  let s = document.getElementById("pilihKas").value;
+  fetch(API + "?sheet=" + s)
+    .then(r => r.json())
+    .then(d => { dataMentah = d; renderTabel(); });
 }
 
-document.getElementById("logoutBtn").onclick=function(){
-  admin = false;
-  document.getElementById("formInput").style.display="none";
-  document.getElementById("loginBtn").style.display="inline";
-  document.getElementById("logoutBtn").style.display="none";
-  renderTabel();
-}
-
-// DATA HANDLER
-function loadData(){
-  let sheet=document.getElementById("pilihKas").value;
-  fetch(API+"?sheet="+sheet)
-  .then(res=>res.json())
-  .then(data=>{
-    dataMentah = data;
-    renderTabel();
-  });
-}
-
-function renderTabel(){
-  let bF = document.getElementById("filterBulan").value;
-  let pF = document.getElementById("filterPeriode").value;
-  let html = ""; let running = 0; let tM = 0; let tK = 0;
-
-  let bA = bF === "" ? 12 : parseInt(bF);
-  let bStart = 1;
-  if (pF === "bulan" && bF !== "") bStart = bA;
-  else if (pF === "3bulan") bStart = Math.max(1, bA - 2);
-
-  // Update Table Header (Aksi kolom jika admin)
+// 3. RENDER TABEL (LOGIKA UTAMA)
+function renderTabel() {
+  let filter = document.getElementById("filterBulan").value;
+  let html = ""; let runSaldo = 0;
+  
+  // Header Aksi jika admin
   document.getElementById("tableHead").innerHTML = `
-    <th>Tanggal</th><th>Keterangan</th><th>Masuk</th><th>Keluar</th><th>Saldo</th>
-    ${admin ? '<th>Aksi</th>' : ''}`;
+    <th>Tgl Input</th><th>Keterangan</th><th>Masuk</th><th>Keluar</th><th>Saldo</th>
+    ${adminMode ? '<th>Aksi</th>' : ''}`;
 
-  dataMentah.forEach((d, index)=>{
-    let tgl = new Date(d.tanggal);
-    let bln = tgl.getMonth() + 1;
-    let m = Number(d.masuk) || 0;
-    let k = Number(d.keluar) || 0;
+  dataMentah.forEach((item, index) => {
+    let m = Number(item.masuk) || 0;
+    let k = Number(item.keluar) || 0;
+    runSaldo += (m - k);
 
-    running += (m - k);
-
-    if (bln >= bStart && bln <= bA) {
-      tM += m; tK += k;
-      let aksi = admin ? `<td>
-        <button class="btn-edit" onclick="editData(${index})">Edit</button>
-        <button class="btn-hapus" onclick="hapusData(${index})">Hapus</button>
+    // Tampilkan hanya jika bulan_laporan cocok dengan filter
+    if (filter === "" || item.bulan_laporan == filter) {
+      let aksi = adminMode ? `<td>
+        <button style="background:#f39c12; padding:5px;" onclick="editData(${index})">Edit</button>
+        <button style="background:#e74c3c; padding:5px;" onclick="hapusData(${index})">Del</button>
       </td>` : "";
 
       html += `<tr>
-        <td>${tgl.toLocaleDateString("id-ID")}</td>
-        <td style="text-align:left">${d.keterangan}</td>
+        <td>${new Date(item.tanggal).toLocaleDateString("id-ID")}</td>
+        <td style="text-align:left">${item.keterangan}</td>
         <td class="masuk">${rupiah(m)}</td>
         <td class="keluar">${rupiah(k)}</td>
-        <td style="font-weight:bold">${rupiah(running)}</td>
+        <td style="font-weight:bold">${rupiah(runSaldo)}</td>
         ${aksi}
       </tr>`;
     }
   });
-
   document.getElementById("tabelKas").innerHTML = html;
-  document.getElementById("saldo").innerHTML = "Saldo Akhir: " + rupiah(running);
-  grafik(tM, tK);
+  document.getElementById("saldoDisplay").innerText = "Saldo Akhir: " + rupiah(runSaldo);
 }
 
-// SIMPAN / EDIT / HAPUS
-function simpan(){
-  let formData = new FormData();
-  formData.append("action","add");
-  formData.append("sheet",document.getElementById("pilihKas").value);
-  formData.append("tanggal",document.getElementById("tanggal").value);
-  formData.append("keterangan",document.getElementById("ket").value);
-  formData.append("masuk",document.getElementById("masuk").value || 0);
-  formData.append("keluar",document.getElementById("keluar").value || 0);
+// 4. CRUD ACTIONS
+function simpan() {
+  let fd = new FormData();
+  fd.append("action", "add");
+  fd.append("sheet", document.getElementById("pilihKas").value);
+  fd.append("tanggal", document.getElementById("tanggal").value);
+  fd.append("keterangan", document.getElementById("ket").value);
+  fd.append("masuk", document.getElementById("masuk").value || 0);
+  fd.append("keluar", document.getElementById("keluar").value || 0);
+  fd.append("bulan_laporan", document.getElementById("bulanLaporan").value);
 
-  fetch(API,{ method:"POST", body:formData }).then(()=>{ alert("Data Disimpan"); loadData(); resetForm(); });
+  fetch(API, { method: "POST", body: fd }).then(() => { alert("Tersimpan!"); loadData(); });
 }
 
-function hapusData(index) {
-  if(confirm("Hapus data ini?")) {
-    let formData = new FormData();
-    formData.append("action", "delete");
-    formData.append("sheet", document.getElementById("pilihKas").value);
-    formData.append("row", index);
-    fetch(API, { method: "POST", body: formData }).then(() => { loadData(); });
+function hapusData(i) {
+  if(confirm("Hapus baris ini?")) {
+    let fd = new FormData();
+    fd.append("action", "delete");
+    fd.append("sheet", document.getElementById("pilihKas").value);
+    fd.append("row", i);
+    fetch(API, { method: "POST", body: fd }).then(() => loadData());
   }
 }
 
-function editData(index) {
-  let d = dataMentah[index];
+function editData(i) {
+  let d = dataMentah[i];
   document.getElementById("tanggal").value = new Date(d.tanggal).toISOString().split('T')[0];
   document.getElementById("ket").value = d.keterangan;
   document.getElementById("masuk").value = d.masuk;
   document.getElementById("keluar").value = d.keluar;
+  document.getElementById("bulanLaporan").value = d.bulan_laporan;
   
-  let btn = document.getElementById("btnSimpan");
-  btn.innerText = "UPDATE DATA";
-  btn.style.background = "#f39c12";
-  btn.onclick = function() {
-    let formData = new FormData();
-    formData.append("action", "edit");
-    formData.append("row", index);
-    formData.append("sheet", document.getElementById("pilihKas").value);
-    formData.append("tanggal", document.getElementById("tanggal").value);
-    formData.append("keterangan", document.getElementById("ket").value);
-    formData.append("masuk", document.getElementById("masuk").value || 0);
-    formData.append("keluar", document.getElementById("keluar").value || 0);
-    fetch(API, { method: "POST", body: formData }).then(() => { alert("Updated"); location.reload(); });
+  let b = document.getElementById("btnSimpan");
+  b.innerText = "UPDATE DATA"; b.style.background = "#f39c12";
+  b.onclick = () => {
+    let fd = new FormData();
+    fd.append("action", "edit");
+    fd.append("row", i);
+    fd.append("sheet", document.getElementById("pilihKas").value);
+    fd.append("tanggal", document.getElementById("tanggal").value);
+    fd.append("keterangan", document.getElementById("ket").value);
+    fd.append("masuk", document.getElementById("masuk").value || 0);
+    fd.append("keluar", document.getElementById("keluar").value || 0);
+    fd.append("bulan_laporan", document.getElementById("bulanLaporan").value);
+    fetch(API, { method: "POST", body: fd }).then(() => location.reload());
   };
-  window.scrollTo(0,0);
 }
 
-function tutupBuku() {
-  let saldoAngka = Number(document.getElementById("saldo").innerText.replace(/[^0-9]/g, ""));
-  if(confirm("Tutup buku dan pindahkan saldo " + rupiah(saldoAngka) + "?")){
-    let next = new Date(); next.setMonth(next.getMonth() + 1); next.setDate(1);
-    let formData = new FormData();
-    formData.append("action","add");
-    formData.append("sheet",document.getElementById("pilihKas").value);
-    formData.append("tanggal", next.toISOString().split('T')[0]);
-    formData.append("keterangan", "Saldo Pindahan (Kunci)");
-    formData.append("masuk", saldoAngka);
-    formData.append("keluar", 0);
-    fetch(API,{ method:"POST", body:formData }).then(()=>{ alert("Berhasil!"); loadData(); });
-  }
-}
-
-function resetForm() {
-  ["tanggal", "ket", "masuk", "keluar"].forEach(id => document.getElementById(id).value = "");
-}
-
-function cetakPDF(){
+// 5. CETAK PDF
+function cetakPDF() {
   const { jsPDF } = window.jspdf;
   let doc = new jsPDF();
-  let bF = document.getElementById("filterBulan").value;
-  let pF = document.getElementById("filterPeriode").value;
-  
-  let bA = bF === "" ? 12 : parseInt(bF);
-  let bS = 1;
-  if (pF === "bulan" && bF !== "") bS = bA;
-  else if (pF === "3bulan") bS = Math.max(1, bA - 2);
-
-  let rows = []; let sAwal = 0; let run = 0; let tM = 0; let tK = 0;
+  let filter = document.getElementById("filterBulan").value;
+  let rows = []; let saldoAwal = 0; let running = 0;
 
   dataMentah.forEach(d => {
-    let bln = new Date(d.tanggal).getMonth() + 1;
     let m = Number(d.masuk) || 0; let k = Number(d.keluar) || 0;
-    if (bln < bS) { sAwal += (m - k); } 
-    else if (bln >= bS && bln <= bA) {
-      if (rows.length === 0) run = sAwal + (m - k);
-      else run += (m - k);
-      tM += m; tK += k;
-      rows.push([new Date(d.tanggal).toLocaleDateString("id-ID"), d.keterangan, rupiah(m), rupiah(k), rupiah(run)]);
+    if (filter !== "" && Number(d.bulan_laporan) < Number(filter)) {
+      saldoAwal += (m - k);
+    } else if (filter === "" || d.bulan_laporan == filter) {
+      if (rows.length === 0) running = saldoAwal + (m - k);
+      else running += (m - k);
+      rows.push([new Date(d.tanggal).toLocaleDateString("id-ID"), d.keterangan, rupiah(m), rupiah(k), rupiah(running)]);
     }
   });
 
-  rows.unshift(["-", "SALDO PINDAHAN (AWAL)", "-", "-", rupiah(sAwal)]);
+  rows.unshift(["-", "SALDO PINDAHAN (BULAN LALU)", "-", "-", rupiah(saldoAwal)]);
 
-  doc.setFontSize(14);
   doc.text("LAPORAN KAS RT 07 BUMI INDAH CITTY", 105, 15, {align:"center"});
-  doc.setFontSize(10);
-  doc.text(`Periode: ${bS} s/d ${bA}`, 105, 22, {align:"center"});
-
   doc.autoTable({
-    startY: 30,
+    startY: 25,
     head: [["Tanggal", "Keterangan", "Masuk", "Keluar", "Saldo"]],
     body: rows,
-    theme: 'grid',
-    headStyles: { fillColor: [47, 128, 237] },
-    columnStyles: { 2:{halign:'right'}, 3:{halign:'right'}, 4:{halign:'right'} }
+    theme: 'grid'
   });
-
-  let fY = doc.lastAutoTable.finalY + 10;
-  doc.text(`Total Pemasukan: ${rupiah(tM)}`, 14, fY);
-  doc.text(`Total Pengeluaran: ${rupiah(tK)}`, 14, fY + 7);
-  doc.setFont(undefined, 'bold');
-  doc.text(`SALDO AKHIR: ${rupiah(sAwal + tM - tK)}`, 14, fY + 14);
-
-  doc.setFont(undefined, 'normal');
-  doc.text("Ketua RT 07: Muhammad Zainudin", 14, fY + 30);
-  doc.text("Bendahara: Abdul Goni", 150, fY + 30);
-
   window.open(doc.output('bloburl'), '_blank');
-}
-
-function grafik(masuk,keluar){
-  if(chart) chart.destroy();
-  chart=new Chart(document.getElementById("chartKas"),{
-    type:"doughnut",
-    data:{ labels:["Masuk","Keluar"], datasets:[{ data:[masuk,keluar], backgroundColor: ['#27ae60', '#e74c3c'] }] }
-  });
-}
-
-function cariData(){
-  let input=document.getElementById("search").value.toLowerCase();
-  let rows=document.querySelectorAll("#tabelKas tr");
-  rows.forEach(r=>{ r.style.display=r.innerText.toLowerCase().includes(input)?"":"none"; });
 }
 
 loadData();
