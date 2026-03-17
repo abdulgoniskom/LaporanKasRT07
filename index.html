@@ -3,266 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Kas RT 07</title>
+    <title>Sistem Informasi RT 07</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; background: #f4f7f6; color: #333; }
-        header { background: #2f80ed; color: white; padding: 20px; text-align: center; }
-        .container { max-width: 900px; margin: auto; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
-        .flex > div { flex: 1; min-width: 150px; }
-        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; }
-        select, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-blue { background: #2f80ed; }
-        .btn-green { background: #27ae60; width: 100%; margin-top: 10px; }
-        .btn-pdf { background: #8e44ad; }
-        .btn-login { background: #27ae60; float: right; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
-        th, td { border-bottom: 1px solid #ddd; padding: 12px 8px; text-align: center; }
-        th { background: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; }
+        header { background: #1877f2; color: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .flex-row { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
+        .flex-row > div { flex: 1; min-width: 150px; }
+        label { display: block; font-size: 13px; margin-bottom: 5px; color: #555; font-weight: bold; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-blue { background: #1877f2; color: white; }
+        .btn-green { background: #2ecc71; color: white; width: 100%; margin-top: 10px; }
+        .btn-login { background: #27ae60; color: white; float: right; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th { background: #f8f9fa; padding: 12px; border: 1px solid #ddd; }
+        td { padding: 10px; border: 1px solid #ddd; text-align: center; }
         .masuk { color: #27ae60; font-weight: bold; }
         .keluar { color: #e74c3c; font-weight: bold; }
-        #formInput { display: none; border-top: 5px solid #27ae60; }
+        #adminPanel { display: none; border-top: 5px solid #27ae60; }
+        @media (max-width: 600px) { .flex-row > div { min-width: 100%; } }
     </style>
 </head>
 <body>
 
-<header><h1>DASHBOARD KAS RT 07</h1></header>
+<header>DASHBOARD KAS RT 07</header>
 
 <div class="container">
-    <button id="loginBtn" class="btn-login">LOGIN ADMIN</button>
-    <button id="logoutBtn" class="btn-login" style="display:none; background:#e74c3c">LOGOUT</button>
+    <button id="loginBtn" class="btn-login" onclick="aksesAdmin()">LOGIN ADMIN</button>
     <div style="clear: both;"></div>
 
     <div class="card">
-        <div class="flex">
+        <div class="flex-row">
             <div>
-                <label>BULAN LAPORAN:</label>
-                <select id="filterBulan" onchange="renderTabel()">
-                    <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
-                    <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
-                    <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
-                    <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                <label>LIHAT LAPORAN BULAN:</label>
+                <select id="selBulan" onchange="renderTabel()">
+                    <option value="1">Januari</option><option value="2">Februari</option>
+                    <option value="11">November</option><option value="12" selected>Desember</option>
                 </select>
             </div>
             <div>
                 <label>TAHUN:</label>
-                <select id="filterTahun" onchange="renderTabel()">
-                    <option value="2025">2025</option><option value="2026" selected>2026</option>
+                <select id="selTahun" onchange="renderTabel()">
+                    <option value="2025" selected>2025</option><option value="2026">2026</option>
                 </select>
             </div>
-            <button class="btn-pdf" onclick="cetakPDF()">📄 CETAK PDF</button>
+            <button class="btn-blue" onclick="cetakLaporan()">📄 CETAK PDF</button>
         </div>
-        <h2 id="saldoDisplay" style="color:#2f80ed; margin-top:20px;">Saldo: Rp 0</h2>
+        <h2 id="totalSaldo" style="color:#1877f2; margin-top:20px;">Saldo Kas: Rp 0</h2>
     </div>
 
-    <div id="formInput" class="card">
-        <h3 id="formTitle">TAMBAH DATA</h3>
-        <div class="flex">
-            <div><label>Tgl Transaksi:</label><input type="date" id="tanggal"></div>
-            <div><label>Laporan Bulan:</label><select id="inBulan"><option value="1">Januari</option><option value="12">Desember</option></select></div>
-            <div><label>Laporan Tahun:</label><select id="inTahun"><option value="2025">2025</option><option value="2026">2026</option></select></div>
+    <div id="adminPanel" class="card">
+        <h3>INPUT DATA BARU</h3>
+        <div class="flex-row">
+            <div><label>Tanggal Transaksi:</label><input type="date" id="inTgl"></div>
+            <div><label>Keterangan:</label><input type="text" id="inKet" placeholder="Contoh: Kas Bapak-bapak..."></div>
         </div>
-        <label style="margin-top:10px;">Keterangan:</label><input type="text" id="ket">
-        <div class="flex" style="margin-top:10px;">
-            <div><label>Masuk (Rp):</label><input type="number" id="masuk"></div>
-            <div><label>Keluar (Rp):</label><input type="number" id="keluar"></div>
+        <div class="flex-row" style="margin-top:15px;">
+            <div><label>Masuk (Rp):</label><input type="number" id="inM"></div>
+            <div><label>Keluar (Rp):</label><input type="number" id="inK"></div>
+            <button class="btn-green" onclick="simpanData()">SIMPAN TRANSAKSI</button>
         </div>
-        <button id="btnSimpan" class="btn-green" onclick="simpanData()">SIMPAN DATA</button>
-        <button id="btnBatal" onclick="resetForm()" style="background:#95a5a6; width:100%; margin-top:5px; display:none;">BATAL</button>
     </div>
 
     <div class="card" style="overflow-x:auto;">
         <table>
-            <thead><tr id="tableHead"><th>Tanggal</th><th>Keterangan</th><th>Masuk</th><th>Keluar</th><th>Saldo</th></tr></thead>
-            <tbody id="tabelKas"></tbody>
+            <thead>
+                <tr><th>Tanggal</th><th>Keterangan</th><th>Masuk</th><th>Keluar</th><th>Saldo</th><th class="adm">Aksi</th></tr>
+            </thead>
+            <tbody id="tabelBody"></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    const API = "https://script.google.com/macros/s/AKfycbxZ1XJfITGqtU1s4hrAEDJ5p0gmt7ZH7SXlV99fQBHMNlLl7d5wqfO8cjoiwAJSLlY/exec"; 
-    let dataMentah = [];
-    let adminMode = false;
-    let editIndex = null;
+    const API = "https://script.google.com/macros/s/AKfycbxohG_ln61PWngjv0qBRrAz4eIa5hajO4HAu7AiIg7aqun-AQ9aWFNUSUAvKfd3OuY/exec"; // GANTI DENGAN URL DEPLOYMENT ANDA
+    let db = [];
+    let isAdm = false;
 
-    function rupiah(n) { return n ? "Rp " + Number(n).toLocaleString("id-ID") : "-"; }
+    function rupiah(n) { return "Rp " + Number(n).toLocaleString("id-ID"); }
+    
+    function kAngka(v) { 
+        if(!v) return 0;
+        return parseInt(String(v).replace(/[^0-9-]/g, '')) || 0; 
+    }
 
-    function loadData() {
-        fetch(API + "?sheet=Kas_RT").then(r => r.json()).then(d => { 
-            dataMentah = d; 
-            renderTabel(); 
+    function load() {
+        fetch(API + "?sheet=Kas_RT").then(res => res.json()).then(data => {
+            db = data.map(d => ({
+                ...d,
+                masuk: kAngka(d.masuk),
+                keluar: kAngka(d.keluar),
+                // Logika: Jika input Jan 2026, simpan label "Desember 2025"
+                blnRef: new Date(d.tanggal).getMonth() === 0 ? 12 : new Date(d.tanggal).getMonth(),
+                thnRef: new Date(d.tanggal).getMonth() === 0 ? new Date(d.tanggal).getFullYear() - 1 : new Date(d.tanggal).getFullYear()
+            }));
+            renderTabel();
         });
     }
 
     function renderTabel() {
-  // Ambil pilihan dari dropdown filter
-  let fB = String(document.getElementById("filterBulan").value).trim();
-  let fT = String(document.getElementById("filterTahun").value).trim();
-  
-  let html = ""; 
-  let runningSaldo = 0; 
+        let fB = document.getElementById("selBulan").value;
+        let fT = document.getElementById("selTahun").value;
+        let html = ""; let saldoJalan = 0;
 
-  // Reset Header Tabel
-  document.getElementById("tableHead").innerHTML = `
-    <th>Tanggal</th><th>Keterangan</th><th>Masuk</th><th>Keluar</th><th>Saldo</th>
-    ${adminMode ? '<th>Aksi</th>' : ''}`;
+        db.forEach((d, i) => {
+            saldoJalan += (d.masuk - d.keluar);
 
-  dataMentah.forEach((d, index) => {
-    let m = Number(d.masuk) || 0;
-    let k = Number(d.keluar) || 0;
-    
-    // Saldo kumulatif dihitung untuk SEMUA data (Saldo berjalan)
-    runningSaldo += (m - k);
-
-    // LOGIKA FILTER KETAT:
-    // Hanya tampilkan jika kolom 'bulan_laporan' di Sheets SAMA DENGAN dropdown filter
-    let blnData = String(d.bulan_laporan).trim();
-    let thnData = String(d.tahun_laporan).trim();
-
-    if (blnData === fB && thnData === fT) {
-      html += `<tr>
-        <td>${new Date(d.tanggal).toLocaleDateString("id-ID")}</td>
-        <td style="text-align:left">${d.keterangan}</td>
-        <td class="masuk">${rupiah(m)}</td>
-        <td class="keluar">${rupiah(k)}</td>
-        <td style="font-weight:bold">${rupiah(runningSaldo)}</td>
-        ${adminMode ? `<td>
-            <button onclick="editData(${index})" style="background:orange">Edit</button>
-            <button onclick="hapusData(${index})" style="background:red">Del</button>
-        </td>` : ""}
-      </tr>`;
+            // Filter data Januari agar masuk ke Laporan Desember
+            if (String(d.blnRef) === fB && String(d.thnRef) === fT) {
+                html += `<tr>
+                    <td>${new Date(d.tanggal).toLocaleDateString("id-ID")}</td>
+                    <td style="text-align:left">${d.keterangan}</td>
+                    <td class="masuk">${rupiah(d.masuk)}</td>
+                    <td class="keluar">${rupiah(d.keluar)}</td>
+                    <td style="font-weight:bold">${rupiah(saldoJalan)}</td>
+                    <td class="adm"><button onclick="hapus(${i})" style="background:red;color:white">X</button></td>
+                </tr>`;
+            }
+        });
+        document.getElementById("tabelBody").innerHTML = html || "<tr><td colspan='6'>Data Kosong</td></tr>";
+        document.getElementById("totalSaldo").innerText = "Saldo Akhir: " + rupiah(saldoJalan);
+        document.querySelectorAll(".adm").forEach(el => el.style.display = isAdm ? "table-cell" : "none");
     }
-  });
-
-  document.getElementById("tabelKas").innerHTML = html || '<tr><td colspan="6">Tidak ada transaksi untuk laporan bulan ini.</td></tr>';
-  document.getElementById("saldoDisplay").innerText = "Saldo Kas: " + rupiah(runningSaldo);
-}
 
     function simpanData() {
         let fd = new FormData();
-        fd.append("action", editIndex !== null ? "edit" : "add");
-        if(editIndex !== null) fd.append("row", editIndex);
-        fd.append("tanggal", document.getElementById("tanggal").value);
-        fd.append("keterangan", document.getElementById("ket").value);
-        fd.append("masuk", document.getElementById("masuk").value || 0);
-        fd.append("keluar", document.getElementById("keluar").value || 0);
-        fd.append("bulan_laporan", document.getElementById("inBulan").value);
-        fd.append("tahun_laporan", document.getElementById("inTahun").value);
-
-        fetch(API, { method: "POST", body: fd }).then(() => { alert("Sukses!"); resetForm(); loadData(); });
+        fd.append("action", "add");
+        fd.append("tanggal", document.getElementById("inTgl").value);
+        fd.append("keterangan", document.getElementById("inKet").value);
+        fd.append("masuk", document.getElementById("inM").value || 0);
+        fd.append("keluar", document.getElementById("inK").value || 0);
+        
+        fetch(API, { method: "POST", body: fd }).then(() => { alert("Tersimpan!"); load(); });
     }
 
-    function editData(i) {
-        let d = dataMentah[i]; editIndex = i;
-        document.getElementById("tanggal").value = new Date(d.tanggal).toISOString().split('T')[0];
-        document.getElementById("ket").value = d.keterangan;
-        document.getElementById("masuk").value = d.masuk;
-        document.getElementById("keluar").value = d.keluar;
-        document.getElementById("inBulan").value = d.bulan_laporan;
-        document.getElementById("inTahun").value = d.tahun_laporan;
-        document.getElementById("btnSimpan").innerText = "UPDATE DATA";
-        document.getElementById("btnBatal").style.display = "block";
-        window.scrollTo(0,0);
+    function aksesAdmin() {
+        if(prompt("Sandi:") === "123") {
+            isAdm = true;
+            document.getElementById("adminPanel").style.display = "block";
+            document.getElementById("loginBtn").style.display = "none";
+            renderTabel();
+        }
     }
 
-    function hapusData(i) { if(confirm("Hapus?")) { let fd = new FormData(); fd.append("action", "delete"); fd.append("row", i); fetch(API, {method:"POST", body:fd}).then(()=>loadData()); } }
-
-    function resetForm() { editIndex = null; document.getElementById("btnSimpan").innerText = "SIMPAN DATA"; document.getElementById("btnBatal").style.display="none"; }
-
-    document.getElementById("loginBtn").onclick = () => { if(prompt("Pass:")==="12345"){ adminMode=true; document.getElementById("formInput").style.display="block"; document.getElementById("loginBtn").style.display="none"; document.getElementById("logoutBtn").style.display="inline"; renderTabel(); }};
-    document.getElementById("logoutBtn").onclick = () => location.reload();
-
-    function cetakPDF() {
-  const { jsPDF } = window.jspdf;
-  let doc = new jsPDF();
-  
-  // Ambil nilai filter dari dropdown (Pastikan string agar aman)
-  let filterBln = String(document.getElementById("filterBulan").value).trim();
-  let filterThn = String(document.getElementById("filterTahun").value).trim();
-  
-  let rows = []; 
-  let saldoPindahan = 0; 
-  let runningBulanIni = 0;
-
-  // Konversi filter ke angka untuk perbandingan Saldo Pindahan
-  let fB = parseInt(filterBln);
-  let fT = parseInt(filterThn);
-
-  dataMentah.forEach(d => {
-    let m = Number(d.masuk) || 0;
-    let k = Number(d.keluar) || 0;
-    
-    // Data dari Sheets (Pastikan string & angka sinkron)
-    let bDataStr = String(d.bulan_laporan).trim();
-    let tDataStr = String(d.tahun_laporan).trim();
-    let bDataNum = parseInt(bDataStr);
-    let tDataNum = parseInt(tDataStr);
-
-    // 1. LOGIKA SALDO PINDAHAN (Semua transaksi SEBELUM periode filter)
-    if (tDataNum < fT || (tDataNum === fT && bDataNum < fB)) {
-      saldoPindahan += (m - k);
-    } 
-    
-    // 2. LOGIKA DATA BULAN INI (Hanya yang BULAN & TAHUN LAPORAN-nya SAMA)
-    else if (bDataStr === filterBln && tDataStr === filterThn) {
-      // Jika ini baris pertama bulan ini, running saldo mulai dari saldo pindahan + transaksi pertama
-      if (rows.length === 0) {
-        runningBulanIni = saldoPindahan + (m - k);
-      } else {
-        runningBulanIni += (m - k);
-      }
-      
-      rows.push([
-        new Date(d.tanggal).toLocaleDateString("id-ID"),
-        d.keterangan,
-        rupiah(m),
-        rupiah(k),
-        rupiah(runningBulanIni)
-      ]);
+    function cetakLaporan() {
+        const { jsPDF } = window.jspdf;
+        let doc = new jsPDF();
+        doc.text("LAPORAN KAS RT 07", 10, 10);
+        doc.autoTable({ html: 'table' });
+        window.open(doc.output('bloburl'));
     }
-  });
 
-  // Tambahkan Baris Saldo Pindahan di urutan paling atas tabel PDF
-  rows.unshift([
-    "-", 
-    "SALDO PINDAHAN DARI PERIODE SEBELUMNYA", 
-    "-", 
-    "-", 
-    rupiah(saldoPindahan)
-  ]);
-
-  // Desain PDF
-  doc.setFontSize(16);
-  doc.text("LAPORAN KAS RT 07", 105, 15, { align: "center" });
-  doc.setFontSize(10);
-  doc.text(`Periode: ${document.getElementById("filterBulan").options[document.getElementById("filterBulan").selectedIndex].text} ${filterThn}`, 105, 22, { align: "center" });
-
-  doc.autoTable({
-    startY: 28,
-    head: [["Tanggal", "Keterangan", "Masuk", "Keluar", "Saldo"]],
-    body: rows,
-    theme: 'grid',
-    headStyles: { fillColor: [47, 128, 237], halign: 'center' }, // Warna biru dashboard
-    columnStyles: {
-      0: { halign: 'center' },
-      2: { halign: 'right' },
-      3: { halign: 'right' },
-      4: { halign: 'right', fontStyle: 'bold' }
-    }
-  });
-
-  // Tambahkan Info Saldo Akhir di bawah tabel
-  let finalY = doc.lastAutoTable.finalY + 10;
-  doc.setFontSize(12);
-  doc.text(`Total Saldo Akhir: ${rupiah(saldoPindahan + (rows.slice(1).reduce((a, b) => a + (parseInt(b[2].replace(/[^0-9-]/g, '')) || 0) - (parseInt(b[3].replace(/[^0-9-]/g, '')) || 0), 0)))}`, 14, finalY);
-
-  window.open(doc.output('bloburl'), '_blank');
-}
-    loadData();
+    load();
 </script>
 </body>
 </html>
