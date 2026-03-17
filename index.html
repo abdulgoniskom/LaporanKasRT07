@@ -9,355 +9,304 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-body{
-  font-family:Arial;
-  margin:0;
-  background:#eef2f7;
-}
-header{
-  background:#2f80ed;
-  color:white;
-  padding:15px;
-  text-align:center;
-}
-.container{
-  padding:20px;
-  max-width:1000px;
-  margin:auto;
-}
-.card{
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:20px;
-  box-shadow:0 4px 8px rgba(0,0,0,0.1);
-}
-button{
-  background:#2f80ed;
-  color:white;
-  border:none;
-  padding:8px 12px;
-  border-radius:5px;
-  cursor:pointer;
-}
-.logout{
-  background:red;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  table-layout:auto;
-  min-width:600px;
-}
-th,td{
-  border-bottom:1px solid #ddd;
-  padding:8px;
-  text-align:center;
-  font-size:13px;
-}
-th{
-  background:#2f80ed;
-  color:white;
-}
-.masuk{
-  color:green;
-  font-weight:bold;
-}
-.keluar{
-  color:red;
-  font-weight:bold;
-}
-input,select{
-  padding:8px;
-  margin:5px;
-}
-.formInput{
-  display:none;
-}
+body{ font-family: 'Segoe UI', Arial, sans-serif; margin:0; background:#f4f7f9; color: #333; }
+header{ background: linear-gradient(135deg, #2f80ed, #56ccf2); color:white; padding:20px; text-align:center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.container{ padding:20px; max-width:1100px; margin:auto; }
+.card{ background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 4px 15px rgba(0,0,0,0.05); }
+
+.admin-header { display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px; }
+#loginBtn { background: #27ae60; font-weight: bold; padding: 10px 20px; border: none; border-radius: 8px; color: white; cursor: pointer; }
+#logoutBtn { background: #e74c3c; padding: 10px 20px; border: none; border-radius: 8px; color: white; cursor: pointer; }
+
+button{ color:white; border:none; padding:10px 15px; border-radius:6px; cursor:pointer; font-weight: 500; transition: 0.2s; }
+button:hover { opacity: 0.8; }
+.btn-primary { background:#2f80ed; }
+.btn-pdf { background: #8e44ad; }
+.btn-tutup { background: #f39c12; margin-top: 10px; width: 100%; font-weight: bold; }
+
+table{ width:100%; border-collapse:collapse; margin-top: 10px; min-width: 700px; }
+th,td{ border-bottom:1px solid #eee; padding:12px 8px; text-align:center; font-size:13px; }
+th{ background:#2f80ed; color:white; text-transform: uppercase; font-size: 11px; }
+.masuk{ color:#27ae60; font-weight:bold; }
+.keluar{ color:#e74c3c; font-weight:bold; }
+
+input,select{ padding:10px; margin:5px; border: 1px solid #ddd; border-radius: 6px; }
+.formInput{ display:none; border-left: 5px solid #27ae60; }
+.saldo-box { color: #2c3e50; margin: 10px 0; padding: 10px; background: #e8f4fd; border-radius: 8px; display: inline-block; }
+
+.btn-edit { background: #f39c12; padding: 5px 8px; font-size: 11px; margin-right: 2px; }
+.btn-hapus { background: #e74c3c; padding: 5px 8px; font-size: 11px; }
+
+@media (max-width: 600px) { input, select, button { width: 100%; margin: 5px 0; } }
 </style>
 </head>
 <body>
 
 <header>
-<h2>Laporan Kas RT 07 Bumi Indah Citty</h2>
+  <h2>Laporan Kas RT 07 Bumi Indah Citty</h2>
 </header>
 
 <div class="container">
+  
+  <div class="admin-header">
+    <button id="loginBtn">🔑 LOGIN ADMIN</button>
+    <button id="logoutBtn" style="display:none">Logout</button>
+  </div>
 
-<div class="card">
-<select id="pilihKas" onchange="loadData()">
-  <option value="Kas_RT">Kas RT</option>
-  <option value="Kas_Agustusan">Kas Agustusan</option>
-</select>
+  <div class="card">
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+      <select id="pilihKas" onchange="loadData()">
+        <option value="Kas_RT">Kas RT</option>
+        <option value="Kas_Agustusan">Kas Agustusan</option>
+      </select>
 
-<select id="filterBulan" onchange="loadData()">
-  <option value="">Semua Bulan</option>
-  <option value="1">Januari</option>
-  <option value="2">Februari</option>
-  <option value="3">Maret</option>
-  <option value="4">April</option>
-  <option value="5">Mei</option>
-  <option value="6">Juni</option>
-  <option value="7">Juli</option>
-  <option value="8">Agustus</option>
-  <option value="9">September</option>
-  <option value="10">Oktober</option>
-  <option value="11">November</option>
-  <option value="12">Desember</option>
-</select>
+      <select id="filterBulan" onchange="renderTabel()">
+        <option value="">Semua Bulan</option>
+        <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+        <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+        <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+        <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+      </select>
 
-<select id="filterPeriode" onchange="loadData()">
-  <option value="bulan">Per Bulan</option>
-  <option value="3bulan">3 Bulan</option>
-  <option value="tahun">1 Tahun</option>
-</select>
+      <select id="filterPeriode" onchange="renderTabel()">
+        <option value="bulan">Per Bulan</option>
+        <option value="3bulan">Per 3 Bulan</option>
+        <option value="tahun">Per Tahun</option>
+      </select>
+      
+      <button class="btn-pdf" onclick="cetakPDF()">📄 Cetak PDF</button>
+    </div>
 
-<h3 id="saldo">Saldo : Rp 0</h3>
+    <div class="saldo-box">
+      <h2 id="saldo" style="margin:0">Saldo : Rp 0</h2>
+    </div>
+  </div>
 
-<div style="text-align:right">
-  <button id="loginBtn">Login Admin</button>
-  <button id="logoutBtn" class="logout" style="display:none">Logout</button>
-  <button onclick="cetakPDF()">Cetak PDF</button>
-</div>
-</div>
+  <div class="card formInput" id="formInput">
+    <h3 id="formTitle">Tambah Transaksi Baru</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+      <input type="date" id="tanggal">
+      <input type="text" id="ket" placeholder="Keterangan">
+      <input type="number" id="masuk" placeholder="Masuk (Rp)">
+      <input type="number" id="keluar" placeholder="Keluar (Rp)">
+    </div>
+    <button class="btn-primary" id="btnSimpan" onclick="simpan()" style="margin-top:15px; width: 100%; background: #27ae60;">Simpan Transaksi</button>
+    <button class="btn-tutup" onclick="tutupBuku()">🔒 Tutup Buku (Pindahkan Saldo)</button>
+  </div>
 
-<div class="card formInput" id="formInput">
-<h3>Input Transaksi</h3>
-<input type="date" id="tanggal">
-<input type="text" id="ket" placeholder="Keterangan">
-<input type="number" id="masuk" placeholder="Kas Masuk">
-<input type="number" id="keluar" placeholder="Kas Keluar">
-<button onclick="simpan()">Simpan</button>
-</div>
+  <div class="card">
+    <input type="text" id="search" placeholder="Cari keterangan atau tanggal..." onkeyup="cariData()" style="width: 97%; margin-bottom:15px;">
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr id="tableHead">
+            <th>Tanggal</th>
+            <th>Keterangan</th>
+            <th>Masuk</th>
+            <th>Keluar</th>
+            <th>Saldo</th>
+          </tr>
+        </thead>
+        <tbody id="tabelKas"></tbody>
+      </table>
+    </div>
+  </div>
 
-<div class="card">
-<input type="text" id="search" placeholder="Cari transaksi..." onkeyup="cariData()">
-<div style="overflow-x:auto;">
-<table>
-  <thead>
-    <tr>
-      <th>Tanggal</th>
-      <th>Keterangan</th>
-      <th>Masuk</th>
-      <th>Keluar</th>
-      <th>Saldo</th>
-    </tr>
-  </thead>
-  <tbody id="tabelKas"></tbody>
-</table>
-</div>
-</div>
-
-<div class="card">
-<h3>Grafik Pemasukan vs Pengeluaran</h3>
-<canvas id="chartKas"></canvas>
-</div>
+  <div class="card">
+    <h3>Statistik Kas</h3>
+    <div style="max-width: 300px; margin: auto;">
+      <canvas id="chartKas"></canvas>
+    </div>
+  </div>
 
 </div>
 
 <script>
-const API="https://script.google.com/macros/s/AKfycbywANVube6h-uacfNpwWMPd7zk2XM59D0SNq1R4eio3KTJil_ctxpozfJLPBbaSWL4/exec";
-let admin=false;
+// GANTI URL INI DENGAN URL DEPLOY ANDA
+const API="https://script.google.com/macros/s/AKfycbzpX94nRCRZA11BSFZSrDcDdA7DBaa3akN1svHFBLjSEe-A0gzVhwAF8eATDDBQiw/exec";
 let chart;
+let dataMentah = [];
+let admin = false;
 
 function rupiah(angka){
   return angka && angka != 0 ? "Rp "+Number(angka).toLocaleString("id-ID") : "-";
 }
 
+// LOGIN SYSTEM
 document.getElementById("loginBtn").onclick=function(){
-  let user=prompt("Username");
-  let pass=prompt("Password");
+  let user=prompt("Username:");
+  let pass=prompt("Password:");
   if(user==="admin" && pass==="12345"){
-    admin=true;
+    admin = true;
     document.getElementById("formInput").style.display="block";
     document.getElementById("loginBtn").style.display="none";
     document.getElementById("logoutBtn").style.display="inline";
-  }else{
-    alert("Login gagal");
-  }
+    renderTabel();
+  } else { alert("Login Gagal!"); }
 }
 
 document.getElementById("logoutBtn").onclick=function(){
-  admin=false;
+  admin = false;
   document.getElementById("formInput").style.display="none";
   document.getElementById("loginBtn").style.display="inline";
   document.getElementById("logoutBtn").style.display="none";
+  renderTabel();
 }
 
-let dataMentah = []; // Variabel global untuk menampung semua data dari server
-
-function loadData() {
-  let sheet = document.getElementById("pilihKas").value;
-  
-  fetch(API + "?sheet=" + sheet)
-    .then(res => res.json())
-    .then(data => {
-      dataMentah = data; // Simpan data asli
-      renderTabel(); // Panggil fungsi untuk menampilkan ke layar
-    });
+// DATA HANDLER
+function loadData(){
+  let sheet=document.getElementById("pilihKas").value;
+  fetch(API+"?sheet="+sheet)
+  .then(res=>res.json())
+  .then(data=>{
+    dataMentah = data;
+    renderTabel();
+  });
 }
 
-function renderTabel() {
-  let bulanFilter = document.getElementById("filterBulan").value;
-  let periodeFilter = document.getElementById("filterPeriode").value;
-  let html = "";
-  let runningSaldo = 0;
-  let totalMasuk = 0;
-  let totalKeluar = 0;
+function renderTabel(){
+  let bF = document.getElementById("filterBulan").value;
+  let pF = document.getElementById("filterPeriode").value;
+  let html = ""; let running = 0; let tM = 0; let tK = 0;
 
-  // LOGIKA PENENTUAN RENTANG
-  let bulanAkhir = bulanFilter === "" ? 12 : parseInt(bulanFilter);
-  let bulanAwal = 1; // Default untuk 'Tahun' atau 'Semua Bulan'
+  let bA = bF === "" ? 12 : parseInt(bF);
+  let bStart = 1;
+  if (pF === "bulan" && bF !== "") bStart = bA;
+  else if (pF === "3bulan") bStart = Math.max(1, bA - 2);
 
-  if (periodeFilter === "bulan" && bulanFilter !== "") {
-    bulanAwal = bulanAkhir;
-  } else if (periodeFilter === "3bulan") {
-    bulanAwal = Math.max(1, bulanAkhir - 2);
-  }
+  // Update Table Header (Aksi kolom jika admin)
+  document.getElementById("tableHead").innerHTML = `
+    <th>Tanggal</th><th>Keterangan</th><th>Masuk</th><th>Keluar</th><th>Saldo</th>
+    ${admin ? '<th>Aksi</th>' : ''}`;
 
-  dataMentah.forEach(d => {
-    let tglObj = new Date(d.tanggal);
-    let bln = tglObj.getMonth() + 1;
+  dataMentah.forEach((d, index)=>{
+    let tgl = new Date(d.tanggal);
+    let bln = tgl.getMonth() + 1;
     let m = Number(d.masuk) || 0;
     let k = Number(d.keluar) || 0;
 
-    // Saldo berjalan selalu dihitung dari awal transaksi dataMentah
-    runningSaldo += (m - k);
+    running += (m - k);
 
-    // Filter baris yang tampil di layar
-    if (bln >= bulanAwal && bln <= bulanAkhir) {
-      totalMasuk += m;
-      totalKeluar += k;
-      html += `
-      <tr>
-        <td>${tglObj.toLocaleDateString("id-ID")}</td>
+    if (bln >= bStart && bln <= bA) {
+      tM += m; tK += k;
+      let aksi = admin ? `<td>
+        <button class="btn-edit" onclick="editData(${index})">Edit</button>
+        <button class="btn-hapus" onclick="hapusData(${index})">Hapus</button>
+      </td>` : "";
+
+      html += `<tr>
+        <td>${tgl.toLocaleDateString("id-ID")}</td>
         <td style="text-align:left">${d.keterangan}</td>
         <td class="masuk">${rupiah(m)}</td>
         <td class="keluar">${rupiah(k)}</td>
-        <td style="font-weight:bold">${rupiah(runningSaldo)}</td>
+        <td style="font-weight:bold">${rupiah(running)}</td>
+        ${aksi}
       </tr>`;
     }
   });
 
   document.getElementById("tabelKas").innerHTML = html;
-  // Saldo yang ditampilkan di dashboard adalah saldo akhir kumulatif
-  document.getElementById("saldo").innerHTML = "Saldo Akhir: " + rupiah(runningSaldo);
-  grafik(totalMasuk, totalKeluar);
-}
-function grafik(masuk,keluar){
-  if(chart) chart.destroy();
-  chart=new Chart(document.getElementById("chartKas"),{
-    type:"doughnut",
-    data:{
-      labels:["Pemasukan","Pengeluaran"],
-      datasets:[{data:[masuk,keluar]}]
-    }
-  });
+  document.getElementById("saldo").innerHTML = "Saldo Akhir: " + rupiah(running);
+  grafik(tM, tK);
 }
 
-function cariData(){
-  let input=document.getElementById("search").value.toLowerCase();
-  let rows=document.querySelectorAll("#tabelKas tr");
-  rows.forEach(r=>{
-    let text=r.innerText.toLowerCase();
-    r.style.display=text.includes(input)?"":"none";
-  });
-}
-
+// SIMPAN / EDIT / HAPUS
 function simpan(){
+  let formData = new FormData();
+  formData.append("action","add");
+  formData.append("sheet",document.getElementById("pilihKas").value);
+  formData.append("tanggal",document.getElementById("tanggal").value);
+  formData.append("keterangan",document.getElementById("ket").value);
+  formData.append("masuk",document.getElementById("masuk").value || 0);
+  formData.append("keluar",document.getElementById("keluar").value || 0);
 
-let sheet = document.getElementById("pilihKas").value;
-
-let formData = new FormData();
-
-formData.append("action","add");
-formData.append("sheet",sheet);
-formData.append("tanggal",document.getElementById("tanggal").value);
-formData.append("keterangan",document.getElementById("ket").value);
-formData.append("masuk",document.getElementById("masuk").value || 0);
-formData.append("keluar",document.getElementById("keluar").value || 0);
-
-fetch(API,{
-method:"POST",
-body:formData
-})
-.then(res=>res.text())
-.then(res=>{
-alert("Data berhasil disimpan");
-loadData();
-
-document.getElementById("tanggal").value="";
-document.getElementById("ket").value="";
-document.getElementById("masuk").value="";
-document.getElementById("keluar").value="";
-})
-.catch(err=>{
-alert("Gagal menyimpan data");
-console.log(err);
-});
-
+  fetch(API,{ method:"POST", body:formData }).then(()=>{ alert("Data Disimpan"); loadData(); resetForm(); });
 }
-function cetakPDF() {
+
+function hapusData(index) {
+  if(confirm("Hapus data ini?")) {
+    let formData = new FormData();
+    formData.append("action", "delete");
+    formData.append("sheet", document.getElementById("pilihKas").value);
+    formData.append("row", index);
+    fetch(API, { method: "POST", body: formData }).then(() => { loadData(); });
+  }
+}
+
+function editData(index) {
+  let d = dataMentah[index];
+  document.getElementById("tanggal").value = new Date(d.tanggal).toISOString().split('T')[0];
+  document.getElementById("ket").value = d.keterangan;
+  document.getElementById("masuk").value = d.masuk;
+  document.getElementById("keluar").value = d.keluar;
+  
+  let btn = document.getElementById("btnSimpan");
+  btn.innerText = "UPDATE DATA";
+  btn.style.background = "#f39c12";
+  btn.onclick = function() {
+    let formData = new FormData();
+    formData.append("action", "edit");
+    formData.append("row", index);
+    formData.append("sheet", document.getElementById("pilihKas").value);
+    formData.append("tanggal", document.getElementById("tanggal").value);
+    formData.append("keterangan", document.getElementById("ket").value);
+    formData.append("masuk", document.getElementById("masuk").value || 0);
+    formData.append("keluar", document.getElementById("keluar").value || 0);
+    fetch(API, { method: "POST", body: formData }).then(() => { alert("Updated"); location.reload(); });
+  };
+  window.scrollTo(0,0);
+}
+
+function tutupBuku() {
+  let saldoAngka = Number(document.getElementById("saldo").innerText.replace(/[^0-9]/g, ""));
+  if(confirm("Tutup buku dan pindahkan saldo " + rupiah(saldoAngka) + "?")){
+    let next = new Date(); next.setMonth(next.getMonth() + 1); next.setDate(1);
+    let formData = new FormData();
+    formData.append("action","add");
+    formData.append("sheet",document.getElementById("pilihKas").value);
+    formData.append("tanggal", next.toISOString().split('T')[0]);
+    formData.append("keterangan", "Saldo Pindahan (Kunci)");
+    formData.append("masuk", saldoAngka);
+    formData.append("keluar", 0);
+    fetch(API,{ method:"POST", body:formData }).then(()=>{ alert("Berhasil!"); loadData(); });
+  }
+}
+
+function resetForm() {
+  ["tanggal", "ket", "masuk", "keluar"].forEach(id => document.getElementById(id).value = "");
+}
+
+function cetakPDF(){
   const { jsPDF } = window.jspdf;
   let doc = new jsPDF();
+  let bF = document.getElementById("filterBulan").value;
+  let pF = document.getElementById("filterPeriode").value;
   
-  let kasName = document.getElementById("pilihKas").selectedOptions[0].text;
-  let bulanFilter = document.getElementById("filterBulan").value;
-  let periodeFilter = document.getElementById("filterPeriode").value;
+  let bA = bF === "" ? 12 : parseInt(bF);
+  let bS = 1;
+  if (pF === "bulan" && bF !== "") bS = bA;
+  else if (pF === "3bulan") bS = Math.max(1, bA - 2);
 
-  // Logika Rentang yang sama dengan renderTabel
-  let bulanAkhir = bulanFilter === "" ? 12 : parseInt(bulanFilter);
-  let bulanAwal = 1;
-  if (periodeFilter === "bulan" && bulanFilter !== "") bulanAwal = bulanAkhir;
-  else if (periodeFilter === "3bulan") bulanAwal = Math.max(1, bulanAkhir - 2);
-
-  let rows = [];
-  let saldoAwal = 0;
-  let runningSaldo = 0;
-  let totalM = 0;
-  let totalK = 0;
-
-  // Daftar nama bulan untuk header
-  const namaBulan = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  let rows = []; let sAwal = 0; let run = 0; let tM = 0; let tK = 0;
 
   dataMentah.forEach(d => {
     let bln = new Date(d.tanggal).getMonth() + 1;
-    let m = Number(d.masuk) || 0;
-    let k = Number(d.keluar) || 0;
-
-    if (bln < bulanAwal) {
-      saldoAwal += (m - k);
-    } else if (bln >= bulanAwal && bln <= bulanAkhir) {
-      if (rows.length === 0) runningSaldo = saldoAwal + (m - k);
-      else runningSaldo += (m - k);
-
-      totalM += m;
-      totalK += k;
-
-      rows.push([
-        new Date(d.tanggal).toLocaleDateString("id-ID"),
-        d.keterangan,
-        rupiah(m),
-        rupiah(k),
-        rupiah(runningSaldo)
-      ]);
+    let m = Number(d.masuk) || 0; let k = Number(d.keluar) || 0;
+    if (bln < bS) { sAwal += (m - k); } 
+    else if (bln >= bS && bln <= bA) {
+      if (rows.length === 0) run = sAwal + (m - k);
+      else run += (m - k);
+      tM += m; tK += k;
+      rows.push([new Date(d.tanggal).toLocaleDateString("id-ID"), d.keterangan, rupiah(m), rupiah(k), rupiah(run)]);
     }
   });
 
-  // Tambahkan baris Saldo Pindahan
-  rows.unshift(["-", "SALDO PINDAHAN (Saldo Awal)", "-", "-", rupiah(saldoAwal)]);
+  rows.unshift(["-", "SALDO PINDAHAN (AWAL)", "-", "-", rupiah(sAwal)]);
 
-  // Header PDF
   doc.setFontSize(14);
-  doc.text("LAPORAN KAS RT 07 BUMI INDAH CITTY", 105, 15, { align: "center" });
+  doc.text("LAPORAN KAS RT 07 BUMI INDAH CITTY", 105, 15, {align:"center"});
   doc.setFontSize(10);
-  
-  // Teks Periode yang Dinamis agar User tidak bingung
-  let teksPeriode = (bulanAwal === bulanAkhir) ? 
-                    `Bulan: ${namaBulan[bulanAwal]}` : 
-                    `Periode: ${namaBulan[bulanAwal]} s/d ${namaBulan[bulanAkhir]}`;
-  
-  doc.text(`Jenis Kas: ${kasName} | ${teksPeriode}`, 105, 22, { align: "center" });
+  doc.text(`Periode: ${bS} s/d ${bA}`, 105, 22, {align:"center"});
 
   doc.autoTable({
     startY: 30,
@@ -365,34 +314,37 @@ function cetakPDF() {
     body: rows,
     theme: 'grid',
     headStyles: { fillColor: [47, 128, 237] },
-    columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } }
+    columnStyles: { 2:{halign:'right'}, 3:{halign:'right'}, 4:{halign:'right'} }
   });
 
-  // Ringkasan Tetap Sama...
-  let finalY = doc.lastAutoTable.finalY + 10;
+  let fY = doc.lastAutoTable.finalY + 10;
+  doc.text(`Total Pemasukan: ${rupiah(tM)}`, 14, fY);
+  doc.text(`Total Pengeluaran: ${rupiah(tK)}`, 14, fY + 7);
   doc.setFont(undefined, 'bold');
-  doc.text(`RINGKASAN ${teksPeriode.toUpperCase()}:`, 14, finalY);
+  doc.text(`SALDO AKHIR: ${rupiah(sAwal + tM - tK)}`, 14, fY + 14);
+
   doc.setFont(undefined, 'normal');
-  doc.text(`Saldo Awal Pindahan : ${rupiah(saldoAwal)}`, 14, finalY + 7);
-  doc.text(`Total Pemasukan    : ${rupiah(totalM)}`, 14, finalY + 14);
-  doc.text(`Total Pengeluaran  : ${rupiah(totalK)}`, 14, finalY + 21);
-  doc.setFont(undefined, 'bold');
-  doc.text(`SALDO AKHIR KAS    : ${rupiah(saldoAwal + totalM - totalK)}`, 14, finalY + 30);
-  // Tanda Tangan
-  let w = doc.internal.pageSize.getWidth();
-  let signY = finalY + 50;
-  doc.setFont(undefined, 'normal');
-  doc.text("Tangerang, " + new Date().toLocaleDateString("id-ID"), w - 20, signY, { align: "right" });
-  doc.text("Ketua RT 07", 30, signY + 10);
-  doc.text("Muhammad Zainudin", 30, signY + 35);
-  doc.text("Bendahara RT 07", w - 30, signY + 10, { align: "right" });
-  doc.text("Abdul Goni", w - 30, signY + 35, { align: "right" });
+  doc.text("Ketua RT 07: Muhammad Zainudin", 14, fY + 30);
+  doc.text("Bendahara: Abdul Goni", 150, fY + 30);
 
   window.open(doc.output('bloburl'), '_blank');
 }
-loadData();
-setInterval(loadData,5000);
-</script>
 
+function grafik(masuk,keluar){
+  if(chart) chart.destroy();
+  chart=new Chart(document.getElementById("chartKas"),{
+    type:"doughnut",
+    data:{ labels:["Masuk","Keluar"], datasets:[{ data:[masuk,keluar], backgroundColor: ['#27ae60', '#e74c3c'] }] }
+  });
+}
+
+function cariData(){
+  let input=document.getElementById("search").value.toLowerCase();
+  let rows=document.querySelectorAll("#tabelKas tr");
+  rows.forEach(r=>{ r.style.display=r.innerText.toLowerCase().includes(input)?"":"none"; });
+}
+
+loadData();
+</script>
 </body>
 </html>
