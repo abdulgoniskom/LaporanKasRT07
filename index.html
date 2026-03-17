@@ -205,13 +205,15 @@ function renderTabel() {
   let totalMasuk = 0;
   let totalKeluar = 0;
 
-  // Tentukan rentang bulan berdasarkan filterPeriode
-  let bulanAkhir = parseInt(bulanFilter);
-  let bulanAwal = bulanAkhir;
+  // LOGIKA PENENTUAN RENTANG
+  let bulanAkhir = bulanFilter === "" ? 12 : parseInt(bulanFilter);
+  let bulanAwal = 1; // Default untuk 'Tahun' atau 'Semua Bulan'
 
-  if (periodeFilter === "3bulan") bulanAwal = Math.max(1, bulanAkhir - 2);
-  if (periodeFilter === "tahun") { bulanAwal = 1; bulanAkhir = 12; }
-  if (bulanFilter === "") { bulanAwal = 1; bulanAkhir = 12; }
+  if (periodeFilter === "bulan" && bulanFilter !== "") {
+    bulanAwal = bulanAkhir;
+  } else if (periodeFilter === "3bulan") {
+    bulanAwal = Math.max(1, bulanAkhir - 2);
+  }
 
   dataMentah.forEach(d => {
     let tglObj = new Date(d.tanggal);
@@ -219,10 +221,10 @@ function renderTabel() {
     let m = Number(d.masuk) || 0;
     let k = Number(d.keluar) || 0;
 
-    // Hitung saldo berjalan untuk semua data (agar saldo akhir akurat)
+    // Saldo berjalan selalu dihitung dari awal transaksi dataMentah
     runningSaldo += (m - k);
 
-    // Filter tampilan berdasarkan periode
+    // Filter baris yang tampil di layar
     if (bln >= bulanAwal && bln <= bulanAkhir) {
       totalMasuk += m;
       totalKeluar += k;
@@ -238,7 +240,8 @@ function renderTabel() {
   });
 
   document.getElementById("tabelKas").innerHTML = html;
-  document.getElementById("saldo").innerHTML = "Saldo Akhir Periode: " + rupiah(totalMasuk - totalKeluar);
+  // Saldo yang ditampilkan di dashboard adalah saldo akhir kumulatif
+  document.getElementById("saldo").innerHTML = "Saldo Akhir: " + rupiah(runningSaldo);
   grafik(totalMasuk, totalKeluar);
 }
 function grafik(masuk,keluar){
@@ -301,13 +304,12 @@ function cetakPDF() {
   let kasName = document.getElementById("pilihKas").selectedOptions[0].text;
   let bulanFilter = document.getElementById("filterBulan").value;
   let periodeFilter = document.getElementById("filterPeriode").value;
-  let blnText = document.getElementById("filterBulan").selectedOptions[0].text;
 
-  // Logika Rentang Periode
+  // Logika Rentang yang sama dengan renderTabel
   let bulanAkhir = bulanFilter === "" ? 12 : parseInt(bulanFilter);
-  let bulanAwal = bulanAkhir;
-  if (periodeFilter === "3bulan") bulanAwal = Math.max(1, bulanAkhir - 2);
-  if (periodeFilter === "tahun" || bulanFilter === "") { bulanAwal = 1; bulanAkhir = 12; }
+  let bulanAwal = 1;
+  if (periodeFilter === "bulan" && bulanFilter !== "") bulanAwal = bulanAkhir;
+  else if (periodeFilter === "3bulan") bulanAwal = Math.max(1, bulanAkhir - 2);
 
   let rows = [];
   let saldoAwal = 0;
@@ -315,16 +317,17 @@ function cetakPDF() {
   let totalM = 0;
   let totalK = 0;
 
+  // Daftar nama bulan untuk header
+  const namaBulan = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+
   dataMentah.forEach(d => {
     let bln = new Date(d.tanggal).getMonth() + 1;
     let m = Number(d.masuk) || 0;
     let k = Number(d.keluar) || 0;
 
     if (bln < bulanAwal) {
-      // Masuk ke Saldo Awal (sebelum periode mulai)
       saldoAwal += (m - k);
     } else if (bln >= bulanAwal && bln <= bulanAkhir) {
-      // Masuk ke Tabel PDF
       if (rows.length === 0) runningSaldo = saldoAwal + (m - k);
       else runningSaldo += (m - k);
 
@@ -341,15 +344,20 @@ function cetakPDF() {
     }
   });
 
-  // Tambahkan baris Saldo Awal di PDF
+  // Tambahkan baris Saldo Pindahan
   rows.unshift(["-", "SALDO PINDAHAN (Saldo Awal)", "-", "-", rupiah(saldoAwal)]);
 
-  // Judul & Header
+  // Header PDF
   doc.setFontSize(14);
   doc.text("LAPORAN KAS RT 07 BUMI INDAH CITTY", 105, 15, { align: "center" });
   doc.setFontSize(10);
-  let infoPeriode = (bulanFilter === "") ? "Semua Periode" : `Periode: ${bulanAwal} s/d ${bulanAkhir}`;
-  doc.text(`Jenis Kas: ${kasName} | ${infoPeriode}`, 105, 22, { align: "center" });
+  
+  // Teks Periode yang Dinamis agar User tidak bingung
+  let teksPeriode = (bulanAwal === bulanAkhir) ? 
+                    `Bulan: ${namaBulan[bulanAwal]}` : 
+                    `Periode: ${namaBulan[bulanAwal]} s/d ${namaBulan[bulanAkhir]}`;
+  
+  doc.text(`Jenis Kas: ${kasName} | ${teksPeriode}`, 105, 22, { align: "center" });
 
   doc.autoTable({
     startY: 30,
@@ -360,17 +368,16 @@ function cetakPDF() {
     columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } }
   });
 
-  // Ringkasan Bawah
+  // Ringkasan Tetap Sama...
   let finalY = doc.lastAutoTable.finalY + 10;
   doc.setFont(undefined, 'bold');
-  doc.text(`RINGKASAN:`, 14, finalY);
+  doc.text(`RINGKASAN ${teksPeriode.toUpperCase()}:`, 14, finalY);
   doc.setFont(undefined, 'normal');
-  doc.text(`Saldo Awal Periode: ${rupiah(saldoAwal)}`, 14, finalY + 7);
-  doc.text(`Total Pemasukan   : ${rupiah(totalM)}`, 14, finalY + 14);
-  doc.text(`Total Pengeluaran : ${rupiah(totalK)}`, 14, finalY + 21);
+  doc.text(`Saldo Awal Pindahan : ${rupiah(saldoAwal)}`, 14, finalY + 7);
+  doc.text(`Total Pemasukan    : ${rupiah(totalM)}`, 14, finalY + 14);
+  doc.text(`Total Pengeluaran  : ${rupiah(totalK)}`, 14, finalY + 21);
   doc.setFont(undefined, 'bold');
-  doc.text(`SALDO AKHIR      : ${rupiah(saldoAwal + totalM - totalK)}`, 14, finalY + 30);
-
+  doc.text(`SALDO AKHIR KAS    : ${rupiah(saldoAwal + totalM - totalK)}`, 14, finalY + 30);
   // Tanda Tangan
   let w = doc.internal.pageSize.getWidth();
   let signY = finalY + 50;
