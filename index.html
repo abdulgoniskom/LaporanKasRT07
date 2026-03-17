@@ -103,22 +103,33 @@ function loadData() {
 }
 
 function renderTabel() {
-  let fB = parseInt(document.getElementById("filterBulan").value);
-  let fT = parseInt(document.getElementById("filterTahun").value);
+  let filterBln = document.getElementById("filterBulan").value;
+  let filterThn = document.getElementById("filterTahun").value;
+  
   let html = ""; 
-  let runningSaldo = 0; // Ini saldo kumulatif dari awal waktu
+  let runningSaldo = 0; 
+
+  // Reset Header
+  document.getElementById("tableHead").innerHTML = `
+    <th>Tanggal</th><th>Keterangan</th><th>Masuk</th><th>Keluar</th><th>Saldo</th>
+    ${adminMode ? '<th>Aksi</th>' : ''}`;
 
   dataMentah.forEach((d, index) => {
     let m = Number(d.masuk) || 0;
     let k = Number(d.keluar) || 0;
-    let bData = parseInt(d.bulan_laporan);
-    let tData = parseInt(d.tahun_laporan);
+    
+    // Pastikan kita membandingkan sebagai STRING agar tidak error tipe data
+    let blnData = String(d.bulan_laporan).trim();
+    let thnData = String(d.tahun_laporan).trim();
+    let blnFilter = String(filterBln).trim();
+    let thnFilter = String(filterThn).trim();
 
-    // Saldo kumulatif tetap dihitung untuk SEMUA data di background
+    // Saldo tetap dihitung kumulatif dari semua data di atasnya
     runningSaldo += (m - k);
 
-    // FILTER KETAT: Hanya tampilkan jika Bulan DAN Tahun SAMA PERSIS
-    if (bData === fB && tData === fT) {
+    // FILTER: Hanya tampilkan jika Bulan & Tahun Laporan sesuai filter
+    // Data Januari (11/1/2026) HANYA muncul jika kolom Bulan_Laporan-nya diisi 12
+    if (blnData === blnFilter && thnData === thnFilter) {
       html += `<tr>
         <td>${new Date(d.tanggal).toLocaleDateString("id-ID")}</td>
         <td style="text-align:left">${d.keterangan}</td>
@@ -133,8 +144,12 @@ function renderTabel() {
     }
   });
 
+  if (html === "") {
+    html = `<tr><td colspan="6">Tidak ada data untuk laporan bulan ini.</td></tr>`;
+  }
+
   document.getElementById("tabelKas").innerHTML = html;
-  document.getElementById("saldoDisplay").innerText = "Saldo Akhir: " + rupiah(runningSaldo);
+  document.getElementById("saldoDisplay").innerText = "Saldo Kas: " + rupiah(runningSaldo);
 }
 function simpan() {
   let fd = new FormData();
