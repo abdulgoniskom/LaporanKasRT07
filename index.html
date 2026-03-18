@@ -127,37 +127,42 @@
     }
 
     function renderTabel() {
-        let selBln = document.getElementById("fBulan").value;
-        let selThn = document.getElementById("fTahun").value;
-        let html = ""; 
-        let saldoJalan = 0;
+    let selBln = parseInt(document.getElementById("fBulan").value); // Bulan yang dipilih user
+    let selThn = parseInt(document.getElementById("fTahun").value); // Tahun yang dipilih user
+    
+    // LOGIKA BARU: Jika user pilih Desember, maka cari data bulan November (11)
+    // Jika user pilih Januari (1), maka cari data bulan Desember (12) tahun sebelumnya
+    let targetBulan = selBln === 1 ? 12 : selBln - 1;
+    let targetTahun = selBln === 1 ? selThn - 1 : selThn;
 
-        document.getElementById("headTabel").innerHTML = `<th>Tanggal</th><th>Keterangan</th><th>Masuk</th><th>Keluar</th><th>Saldo</th>${adminAktif ? '<th>Aksi</th>' : ''}`;
+    let html = ""; 
+    let saldoJalan = 0;
 
-        masterData.forEach((d, i) => {
-            let m = keAngka(d.masuk);
-            let k = keAngka(d.keluar);
-            saldoJalan += (m - k);
+    masterData.forEach((d, i) => {
+        let m = keAngka(d.masuk);
+        let k = keAngka(d.keluar);
+        saldoJalan += (m - k);
 
-            if (String(d.bulan_laporan || "").trim() == String(selBln) && String(d.tahun_laporan || "").trim() == String(selThn)) {
-                html += `<tr>
-                    <td>${d.tanggal ? new Date(d.tanggal).toLocaleDateString("id-ID") : "-"}</td>
-                    <td style="text-align:left">${d.keterangan || ""}</td>
-                    <td class="txt-masuk">${m > 0 ? rupiah(m) : "-"}</td>
-                    <td class="txt-keluar">${k > 0 ? rupiah(k) : "-"}</td>
-                    <td style="font-weight:bold">${rupiah(saldoJalan)}</td>
-                    ${adminAktif ? `<td>
-                        <button onclick="picuEdit(${i})" style="background:#f39c12; color:white; padding:4px 8px; border-radius:4px; border:none; cursor:pointer">Edit</button>
-                        <button onclick="hapusData(${i})" style="background:#e74c3c; color:white; padding:4px 8px; border-radius:4px; border:none; cursor:pointer">Hapus</button>
-                    </td>` : ""}
-                </tr>`;
-            }
-        });
-        document.getElementById("bodiTabel").innerHTML = html || '<tr><td colspan="6">Belum ada data di periode ini.</td></tr>';
-        document.getElementById("saldoText").innerText = "Saldo Kas: " + rupiah(saldoJalan);
-    }
+        // Filter sekarang menggunakan targetBulan dan targetTahun hasil hitungan di atas
+        if (String(d.bulan_laporan || "").trim() == String(targetBulan) && 
+            String(d.tahun_laporan || "").trim() == String(targetTahun)) {
+            
+            html += `<tr>
+                <td>${d.tanggal ? new Date(d.tanggal).toLocaleDateString("id-ID") : "-"}</td>
+                <td style="text-align:left">${d.keterangan || ""}</td>
+                <td class="txt-masuk">${m > 0 ? rupiah(m) : "-"}</td>
+                <td class="txt-keluar">${k > 0 ? rupiah(k) : "-"}</td>
+                <td style="font-weight:bold">${rupiah(saldoJalan)}</td>
+                ${adminAktif ? `<td><button onclick="hapusData(${i})">Hapus</button></td>` : ""}
+            </tr>`;
+        }
+    });
 
-    function prosesSimpan() {
+    document.getElementById("bodiTabel").innerHTML = html || '<tr><td colspan="6">Data kas untuk periode laporan ini tidak ditemukan.</td></tr>';
+    document.getElementById("saldoText").innerText = "Saldo Kas: " + rupiah(saldoJalan);
+}
+
+   function prosesSimpan() {
         let btn = document.getElementById("btnSimpan");
         btn.innerText = "PROSES..."; btn.disabled = true;
 
